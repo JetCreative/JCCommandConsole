@@ -12,28 +12,13 @@ namespace JetCreative.Console
     /// </summary>
     public class JCCommandConsole : MonoBehaviour
     {
-        /// <summary>
-        /// The singleton instance of the <see cref="JCCommandConsole"/> class, ensuring that only one instance is active at any time.
-        /// This field is used internally to store a reference to the active <see cref="JCCommandConsole"/> instance.
-        /// </summary>
         private static JCCommandConsole instance;
 
-        /// <summary>
-        /// A dictionary that maps command names to their corresponding method information.
-        /// This variable is used to register and store all available console commands.
-        /// Commands can be dynamically added by associating a command name, typically
-        /// defined in the custom <see cref="CommandAttribute"/>, with a method.
-        /// </summary>
         private Dictionary<string, MethodInfo> commands = new Dictionary<string, MethodInfo>();
         private Dictionary<string, PropertyInfo> properties = new Dictionary<string, PropertyInfo>();
+        private Dictionary<string, FieldInfo> fields = new Dictionary<string, FieldInfo>();
+        //private Dictionary<string, EventInfo> events = new Dictionary<string, EventInfo>();
 
-        /// <summary>
-        /// Gets the singleton instance of the <see cref="JCCommandConsole"/> class.
-        /// If an instance does not already exist, a new instance is created and persisted across scenes.
-        /// </summary>
-        /// <value>
-        /// The singleton instance of <see cref="JCCommandConsole"/>.
-        /// </value>
         public static JCCommandConsole Instance
         {
             get
@@ -48,12 +33,6 @@ namespace JetCreative.Console
             }
         }
 
-        /// <summary>
-        /// Called when the script instance is being loaded. This method ensures that only one instance of the
-        /// JCCommandConsole exists, initializes it, and makes it persistent across scenes. If another instance
-        /// is found, the duplicate is destroyed. Additionally, this method registers all available commands
-        /// by inspecting the available assemblies.
-        /// </summary>
         private void Awake()
         {
             if (instance == null)
@@ -66,6 +45,10 @@ namespace JetCreative.Console
             {
                 Destroy(gameObject);
             }
+            
+            OnTestFloatChanged = (value) => Debug.Log($"TestFloat changed to {value}");
+            TestAction = () => Debug.Log("TestAction invoked");
+            
         }
 
         private void RegisterCommands()
@@ -104,14 +87,38 @@ namespace JetCreative.Console
                             this.properties[propertyName] = property;
                         }
                     }
+
+                    // Register fields
+                    var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic |
+                                              BindingFlags.Static | BindingFlags.Instance);
+
+                    foreach (var field in fields)
+                    {
+                        var commandAttribute = field.GetCustomAttribute<CommandAttribute>();
+                        if (commandAttribute != null)
+                        {
+                            string fieldName = commandAttribute.CommandName ?? field.Name.ToLower();
+                            this.fields[fieldName] = field;
+                        }
+                    }
+
+                    // Register events
+                    // var events = type.GetEvents(BindingFlags.Public | BindingFlags.NonPublic |
+                    //                           BindingFlags.Static | BindingFlags.Instance);
+                    //
+                    // foreach (var eventInfo in events)
+                    // {
+                    //     var commandAttribute = eventInfo.GetCustomAttribute<CommandAttribute>();
+                    //     if (commandAttribute != null)
+                    //     {
+                    //         string eventName = commandAttribute.CommandName ?? eventInfo.Name.ToLower();
+                    //         this.events[eventName] = eventInfo;
+                    //     }
+                    // }
                 }
             }
         }
 
-        /// <summary>
-        /// Executes a given command string by finding a corresponding method and invoking it with the provided parameters.
-        /// </summary>
-        /// <param name="commandInput">The input command string, including the command name and any required parameters.</param>
         public void ExecuteCommand(string commandInput)
         {
             string[] parts = commandInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -119,15 +126,16 @@ namespace JetCreative.Console
 
             string commandName = parts[0].ToLower();
 
-            // Check if it's a property setting command (using format: set propertyName value)
+            // Check if it's a property setting command
             if (commandName == "set" && parts.Length == 3)
             {
-                string propertyName = parts[1].ToLower();
-                if (properties.TryGetValue(propertyName, out PropertyInfo propertyInfo))
+                string targetName = parts[1].ToLower();
+                
+                // Try set property
+                if (properties.TryGetValue(targetName, out PropertyInfo propertyInfo))
                 {
                     try
                     {
-                        // Find the object instance if it's not static
                         object target = null;
                         if (!propertyInfo.GetMethod.IsStatic)
                         {
@@ -140,10 +148,9 @@ namespace JetCreative.Console
                             target = instances[0];
                         }
 
-                        // Convert and set the value
                         object convertedValue = Convert.ChangeType(parts[2], propertyInfo.PropertyType);
                         propertyInfo.SetValue(target, convertedValue);
-                        ConsoleUI.Instance.Log($"Property {propertyName} set to {convertedValue}");
+                        ConsoleUI.Instance.Log($"Property {targetName} set to {convertedValue}");
                         return;
                     }
                     catch (Exception e)
@@ -152,9 +159,79 @@ namespace JetCreative.Console
                         return;
                     }
                 }
+
+                // Try set field
+                if (fields.TryGetValue(targetName, out FieldInfo fieldInfo))
+                {
+                    try
+                    {
+                        object target = null;
+                        if (!fieldInfo.IsStatic)
+                        {
+                            var instances = FindObjectsOfType(fieldInfo.DeclaringType);
+                            if (instances.Length == 0)
+                            {
+                                ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType.Name} found in scene");
+                                return;
+                            }
+                            target = instances[0];
+                        }
+
+                        object convertedValue = Convert.ChangeType(parts[2], fieldInfo.FieldType);
+                        fieldInfo.SetValue(target, convertedValue);
+                        ConsoleUI.Instance.Log($"Field {targetName} set to {convertedValue}");
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleUI.Instance.LogError($"Error setting field: {e.Message}");
+                        return;
+                    }
+                }
             }
 
-            // Regular command execution
+            // // Check if it's an event invoke command
+            // if (commandName == "invoke" && parts.Length == 2)
+            // {
+            //     string eventName = parts[1].ToLower();
+            //     if (events.TryGetValue(eventName, out EventInfo eventInfo))
+            //     {
+            //         try
+            //         {
+            //             object target = null;
+            //             if (!eventInfo.GetRaiseMethod().IsStatic) 
+            //             {
+            //                 var instances = FindObjectsOfType(eventInfo.DeclaringType);
+            //                 if (instances.Length == 0)
+            //                 {
+            //                     ConsoleUI.Instance.LogError($"No instance of {eventInfo.DeclaringType.Name} found in scene");
+            //                     return;
+            //                 }
+            //                 target = instances[0];
+            //             }
+            //
+            //             var delegateType = eventInfo.EventHandlerType;
+            //             if (delegateType == typeof(Action))
+            //             {
+            //                 var raiseMethod = eventInfo.GetRaiseMethod();
+            //                 raiseMethod?.Invoke(target, new object[] { });
+            //                 ConsoleUI.Instance.Log($"Event {eventName} invoked");
+            //             }
+            //             else
+            //             {
+            //                 ConsoleUI.Instance.LogError($"Event {eventName} has unsupported delegate type");
+            //             }
+            //             return;
+            //         }
+            //         catch (Exception e)
+            //         {
+            //             ConsoleUI.Instance.LogError($"Error invoking event: {e.Message}");
+            //             return;
+            //         }
+            //     }
+            // }
+
+            // Regular method command execution
             if (commands.TryGetValue(commandName, out MethodInfo methodInfo))
             {
                 try
@@ -208,60 +285,31 @@ namespace JetCreative.Console
             }
         }
 
-        /// <summary>
-        /// Registers available commands into the console system by scanning all loaded assemblies
-        /// for methods decorated with the <see cref="CommandAttribute"/>. Commands are stored
-        /// in a dictionary, mapping their command names to the associated method information.
-        /// </summary>
-        /// <remarks>
-        /// The method parses all types and methods within the currently loaded assemblies,
-        /// identifies those with the <see cref="CommandAttribute"/>, and stores them with
-        /// their associated names in the internal command dictionary. If a command name is
-        /// provided explicitly in the attribute, it is used; otherwise, the method name
-        /// (converted to lowercase) is utilized as the command name.
-        /// </remarks>
-        
-
-        /// <summary>
-        /// Toggles the console interface's visibility.
-        /// </summary>
-        /// <param name="enabled">A boolean value that determines whether the console should be enabled (true) or disabled (false).</param>
         public void EnableConsole(bool enabled)
         {
             ConsoleUI.Instance.gameObject.SetActive(enabled);
         }
 
-        /// <summary>
-        /// A test command that logs a message to the Unity debug console.
-        /// </summary>
-        /// <remarks>
-        /// This is a static method decorated with the Command attribute.
-        /// It can be called in the custom command console to ensure the system is working correctly.
-        /// </remarks>
         [Command]
         public static void Test()
         {
             Debug.Log("console test");
         }
 
-        /// Checks if the Console UI is currently active.
-        /// <returns>
-        /// Returns true if the Console UI is active, otherwise false.
-        /// </returns>
         [Command]
         public bool CheckConsole()
         {
             return ConsoleUI.Instance.gameObject.activeSelf;
         }
 
-        /// Adds two numbers and returns the result.
-        /// <param name="a">The first number to be added.</param>
-        /// <param name="b">The second number to be added.</param>
-        /// <return>The sum of the two float parameters.</return>
         [Command("addition")]
         public float AdditionTime(float a, float b) => a + b;
 
         [Command]
         public int TestInt { get; set; }= 0;
+
+        [Command] private float testfloat;
+        [Command] public event Action<float> OnTestFloatChanged;
+        [Command] public static event Action TestAction;
     }
 }

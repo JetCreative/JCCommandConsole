@@ -21,7 +21,7 @@ namespace JetCreative.Console
     /// <example>
     /// Set player health by calling "set playerhealth 100" in console.
     /// </example>
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property| AttributeTargets.Field | AttributeTargets.Event, AllowMultiple = false)]
     public class CommandAttribute : Attribute
     {
         /// <summary>

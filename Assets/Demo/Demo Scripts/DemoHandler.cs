@@ -1,4 +1,5 @@
 ﻿using System;
+using JetCreative.Console;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,5 +24,8 @@ namespace Demo.Demo_Scripts
         {
             openConsoleAction.action.Disable();
         }
+
+        [Command]public float setthisfloat;
+
     }
 }
