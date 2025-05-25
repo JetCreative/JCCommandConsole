@@ -121,18 +121,32 @@ namespace JetCreative.Console
         {
             if (string.IsNullOrEmpty(identifier)) return null;
 
-            // First try to find by exact name
-            GameObject target = GameObject.Find(identifier);
+            // First try to find by exact name (case insensitive)
+            GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
+            GameObject target = allObjects.FirstOrDefault(obj => obj.name.Equals(identifier, StringComparison.OrdinalIgnoreCase));
             if (target != null) return target;
 
-            // Then try to find by tag
-            try {
-                target = GameObject.FindWithTag(identifier);
-                if (target != null) return target;
+            // Then try to find by tag (case insensitive)
+            string[] allTags = UnityEditorInternal.InternalEditorUtility.tags;
+            string matchingTag = allTags.FirstOrDefault(tag => tag.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(matchingTag))
+            {
+                try {
+                    target = GameObject.FindWithTag(matchingTag);
+                    if (target != null) return target;
+                }
+                catch {}
             }
-            catch {}
 
             return null;
+        }
+
+        private GameObject[] FindTargetGameObjects(string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier)) return null;
+
+            GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
+            return allObjects.Where(obj => obj.name.Equals(identifier, StringComparison.OrdinalIgnoreCase)).ToArray();
         }
 
         public void ExecuteCommand(string commandInput)
@@ -140,11 +154,29 @@ namespace JetCreative.Console
             string[] parts = commandInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0) return;
 
+            GameObject[] targetGameObjects = null;
             GameObject targetGameObject = null;
             int startParamIndex = 0;
             
-            // Check if target is specified with @ symbol at start
-            if (parts[0].StartsWith("@"))
+            // Check if target is specified with @@ or @ symbol at start
+            if (parts[0].StartsWith("@@"))
+            {
+                string targetIdentifier = parts[0].Substring(2);
+                targetGameObjects = FindTargetGameObjects(targetIdentifier);
+                if (targetGameObjects == null || targetGameObjects.Length == 0)
+                {
+                    ConsoleUI.Instance.LogError($"No GameObjects found with name '{targetIdentifier}'");
+                    return;
+                }
+                startParamIndex = 1;
+                
+                if (parts.Length <= startParamIndex)
+                {
+                    ConsoleUI.Instance.LogError("No command specified after target");
+                    return;
+                }
+            }
+            else if (parts[0].StartsWith("@"))
             {
                 string targetIdentifier = parts[0].Substring(1); 
                 targetGameObject = FindTargetGameObject(targetIdentifier);
@@ -175,6 +207,21 @@ namespace JetCreative.Console
                 {
                     try
                     {
+                        if (targetGameObjects != null)
+                        {
+                            foreach (var gameObj in targetGameObjects)
+                            {
+                                var component = gameObj.GetComponent(propertyInfo.DeclaringType);
+                                if (component != null)
+                                {
+                                    object propertyValue = Convert.ChangeType(value, propertyInfo.PropertyType);
+                                    propertyInfo.SetValue(component, propertyValue);
+                                    ConsoleUI.Instance.Log($"Property {targetName} set to {propertyValue} on {gameObj.name}");
+                                }
+                            }
+                            return;
+                        }
+
                         object target = null;
                         if (!propertyInfo.GetMethod.IsStatic)
                         {
@@ -216,6 +263,21 @@ namespace JetCreative.Console
                 {
                     try
                     {
+                        if (targetGameObjects != null)
+                        {
+                            foreach (var gameObj in targetGameObjects)
+                            {
+                                var component = gameObj.GetComponent(fieldInfo.DeclaringType);
+                                if (component != null)
+                                {
+                                    object fieldValue = Convert.ChangeType(value, fieldInfo.FieldType);
+                                    fieldInfo.SetValue(component, fieldValue);
+                                    ConsoleUI.Instance.Log($"Field {targetName} set to {fieldValue} on {gameObj.name}");
+                                }
+                            }
+                            return;
+                        }
+
                         object target = null;
                         if (!fieldInfo.IsStatic)
                         {
@@ -271,6 +333,23 @@ namespace JetCreative.Console
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         paramValues[i] = Convert.ChangeType(parts[i + startParamIndex + 1], parameters[i].ParameterType);
+                    }
+
+                    if (targetGameObjects != null)
+                    {
+                        foreach (var gameObj in targetGameObjects)
+                        {
+                            var target = gameObj.GetComponent(methodInfo.DeclaringType);
+                            if (target != null)
+                            {
+                                object methodResult = methodInfo.Invoke(target, paramValues);
+                                if (methodResult != null)
+                                {
+                                    ConsoleUI.Instance.Log($"{gameObj.name}: {methodResult}");
+                                }
+                            }
+                        }
+                        return;
                     }
 
                     object result = null;
