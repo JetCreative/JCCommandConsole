@@ -3,7 +3,7 @@
 namespace JetCreative.Console
 {
     /// <summary>
-    /// Represents a custom attribute that can be applied to methods to mark them as
+    /// Represents a custom attribute that can be applied to methods and properties to mark them as
     /// commands usable in JC Command Console. This attribute allows the method to be
     /// registered as a command during runtime.
     /// </summary>
@@ -15,21 +15,27 @@ namespace JetCreative.Console
     /// <example>
     /// Use this attribute to annotate methods intended to serve as executable console commands.
     /// </example>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    /// <remarks>
+    /// Properties decorated with this attribute can be set in the console via the command "set propertyName value"
+    /// </remarks>
+    /// <example>
+    /// Set player health by calling "set playerhealth 100" in console.
+    /// </example>
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false)]
     public class CommandAttribute : Attribute
     {
         /// <summary>
         /// Gets the name of the command associated with the method. This property is defined in the
-        /// <see cref="CommandAttribute"/> and is used to identify the method as a console command.
-        /// If no value is explicitly provided, the name of the method is used as the default command name.
+        /// <see cref="CommandAttribute"/> and is used to identify the method/property as a console command.
+        /// If no value is explicitly provided, the name of the method/property is used as the default command name.
         /// </summary>
         public string CommandName { get; private set; }
 
         /// <summary>
-        /// Attribute to mark methods as console commands that can be executed by the JCCommandConsole.
+        /// Attribute to mark methods and properties as console commands that can be executed by the JCCommandConsole.
         /// </summary>
         /// <remarks>
-        /// Methods decorated with this attribute can be identified and invoked as commands in the console system.
+        /// Methods/properties decorated with this attribute can be identified and invoked as commands in the console system.
         /// The <c>CommandName</c> property allows assigning an optional name for the command,
         /// which can be different from the method's name.
         /// </remarks>

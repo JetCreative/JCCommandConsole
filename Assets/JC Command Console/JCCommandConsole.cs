@@ -25,7 +25,8 @@ namespace JetCreative.Console
         /// defined in the custom <see cref="CommandAttribute"/>, with a method.
         /// </summary>
         private Dictionary<string, MethodInfo> commands = new Dictionary<string, MethodInfo>();
-       
+        private Dictionary<string, PropertyInfo> properties = new Dictionary<string, PropertyInfo>();
+
         /// <summary>
         /// Gets the singleton instance of the <see cref="JCCommandConsole"/> class.
         /// If an instance does not already exist, a new instance is created and persisted across scenes.
@@ -67,18 +68,6 @@ namespace JetCreative.Console
             }
         }
 
-        /// <summary>
-        /// Registers available commands into the console system by scanning all loaded assemblies
-        /// for methods decorated with the <see cref="CommandAttribute"/>. Commands are stored
-        /// in a dictionary, mapping their command names to the associated method information.
-        /// </summary>
-        /// <remarks>
-        /// The method parses all types and methods within the currently loaded assemblies,
-        /// identifies those with the <see cref="CommandAttribute"/>, and stores them with
-        /// their associated names in the internal command dictionary. If a command name is
-        /// provided explicitly in the attribute, it is used; otherwise, the method name
-        /// (converted to lowercase) is utilized as the command name.
-        /// </remarks>
         private void RegisterCommands()
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -88,6 +77,7 @@ namespace JetCreative.Console
                 var types = assembly.GetTypes();
                 foreach (var type in types)
                 {
+                    // Register methods
                     var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | 
                                                 BindingFlags.Static | BindingFlags.Instance);
                     
@@ -98,6 +88,20 @@ namespace JetCreative.Console
                         {
                             string commandName = commandAttribute.CommandName ?? method.Name.ToLower();
                             commands[commandName] = method;
+                        }
+                    }
+
+                    // Register properties
+                    var properties = type.GetProperties(BindingFlags.Public | 
+                                                  BindingFlags.Static | BindingFlags.Instance);
+                    
+                    foreach (var property in properties)
+                    {
+                        var commandAttribute = property.GetCustomAttribute<CommandAttribute>();
+                        if (commandAttribute != null)
+                        {
+                            string propertyName = commandAttribute.CommandName ?? property.Name.ToLower();
+                            this.properties[propertyName] = property;
                         }
                     }
                 }
@@ -114,57 +118,109 @@ namespace JetCreative.Console
             if (parts.Length == 0) return;
 
             string commandName = parts[0].ToLower();
-            if (!commands.TryGetValue(commandName, out MethodInfo methodInfo))
+
+            // Check if it's a property setting command (using format: set propertyName value)
+            if (commandName == "set" && parts.Length == 3)
             {
-                ConsoleUI.Instance.LogError($"Command not found: {commandName}");
-                return;
-            }
-
-            try
-            {
-                var parameters = methodInfo.GetParameters();
-                object[] paramValues = new object[parameters.Length];
-                
-                if (parts.Length - 1 != parameters.Length)
+                string propertyName = parts[1].ToLower();
+                if (properties.TryGetValue(propertyName, out PropertyInfo propertyInfo))
                 {
-                    ConsoleUI.Instance.LogError($"Invalid number of parameters. Expected {parameters.Length}, got {parts.Length - 1}");
-                    return;
-                }
-
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    paramValues[i] = Convert.ChangeType(parts[i + 1], parameters[i].ParameterType);
-                }
-
-                object result = null;
-                if (methodInfo.IsStatic)
-                {
-                    result = methodInfo.Invoke(null, paramValues);
-                }
-                else
-                {
-                    var instances = FindObjectsOfType(methodInfo.DeclaringType);
-                    if (instances.Length > 0)
+                    try
                     {
-                        result = methodInfo.Invoke(instances[0], paramValues);
+                        // Find the object instance if it's not static
+                        object target = null;
+                        if (!propertyInfo.GetMethod.IsStatic)
+                        {
+                            var instances = FindObjectsOfType(propertyInfo.DeclaringType);
+                            if (instances.Length == 0)
+                            {
+                                ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType.Name} found in scene");
+                                return;
+                            }
+                            target = instances[0];
+                        }
+
+                        // Convert and set the value
+                        object convertedValue = Convert.ChangeType(parts[2], propertyInfo.PropertyType);
+                        propertyInfo.SetValue(target, convertedValue);
+                        ConsoleUI.Instance.Log($"Property {propertyName} set to {convertedValue}");
+                        return;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        ConsoleUI.Instance.LogError($"No instance of {methodInfo.DeclaringType.Name} found in scene");
+                        ConsoleUI.Instance.LogError($"Error setting property: {e.Message}");
                         return;
                     }
                 }
+            }
 
-                if (result != null)
+            // Regular command execution
+            if (commands.TryGetValue(commandName, out MethodInfo methodInfo))
+            {
+                try
                 {
-                    ConsoleUI.Instance.Log(result.ToString());
+                    var parameters = methodInfo.GetParameters();
+                    object[] paramValues = new object[parameters.Length];
+                    
+                    if (parts.Length - 1 != parameters.Length)
+                    {
+                        ConsoleUI.Instance.LogError($"Invalid number of parameters. Expected {parameters.Length}, got {parts.Length - 1}");
+                        return;
+                    }
+
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        paramValues[i] = Convert.ChangeType(parts[i + 1], parameters[i].ParameterType);
+                    }
+
+                    object result = null;
+                    if (methodInfo.IsStatic)
+                    {
+                        result = methodInfo.Invoke(null, paramValues);
+                    }
+                    else
+                    {
+                        var instances = FindObjectsOfType(methodInfo.DeclaringType);
+                        if (instances.Length > 0)
+                        {
+                            result = methodInfo.Invoke(instances[0], paramValues);
+                        }
+                        else
+                        {
+                            ConsoleUI.Instance.LogError($"No instance of {methodInfo.DeclaringType.Name} found in scene");
+                            return;
+                        }
+                    }
+
+                    if (result != null)
+                    {
+                        ConsoleUI.Instance.Log(result.ToString());
+                    }
+                }
+                catch (Exception e)
+                {
+                    ConsoleUI.Instance.LogError($"Error executing command: {e.Message}");
                 }
             }
-            catch (Exception e)
+            else
             {
-                ConsoleUI.Instance.LogError($"Error executing command: {e.Message}");
+                ConsoleUI.Instance.LogError($"Command not found: {commandName}");
             }
         }
+
+        /// <summary>
+        /// Registers available commands into the console system by scanning all loaded assemblies
+        /// for methods decorated with the <see cref="CommandAttribute"/>. Commands are stored
+        /// in a dictionary, mapping their command names to the associated method information.
+        /// </summary>
+        /// <remarks>
+        /// The method parses all types and methods within the currently loaded assemblies,
+        /// identifies those with the <see cref="CommandAttribute"/>, and stores them with
+        /// their associated names in the internal command dictionary. If a command name is
+        /// provided explicitly in the attribute, it is used; otherwise, the method name
+        /// (converted to lowercase) is utilized as the command name.
+        /// </remarks>
+        
 
         /// <summary>
         /// Toggles the console interface's visibility.
@@ -204,5 +260,8 @@ namespace JetCreative.Console
         /// <return>The sum of the two float parameters.</return>
         [Command("addition")]
         public float AdditionTime(float a, float b) => a + b;
+
+        [Command]
+        public int TestInt { get; set; }= 0;
     }
 }

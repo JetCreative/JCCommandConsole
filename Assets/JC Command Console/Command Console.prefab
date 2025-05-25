@@ -45,7 +45,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfb15cb8e8674c00bbf1862973e2d3d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ConsolePrefab: {fileID: 2852352451836477733, guid: 60541d9587d1fcb4c8b677d09e7839e0, type: 3}
 --- !u!1001 &2157578718880576258
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -108,15 +107,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7809087609529170708, guid: 60541d9587d1fcb4c8b677d09e7839e0, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7809087609529170708, guid: 60541d9587d1fcb4c8b677d09e7839e0, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7809087609529170708, guid: 60541d9587d1fcb4c8b677d09e7839e0, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7809087609529170708, guid: 60541d9587d1fcb4c8b677d09e7839e0, type: 3}
       propertyPath: m_AnchoredPosition.x

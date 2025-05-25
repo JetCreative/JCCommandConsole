@@ -1,0 +1,34 @@
+{
+    "name": "Demo Inputs",
+    "maps": [
+        {
+            "name": "OpenConsole",
+            "id": "75100089-4f58-4c6e-9f80-91c0fe9a2425",
+            "actions": [
+                {
+                    "name": "OpenWindow",
+                    "type": "Button",
+                    "id": "9408a75a-4669-47b9-8a8e-4894342670fe",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2f190d0c-4061-4f37-94f7-a853de9044a1",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "OpenWindow",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
