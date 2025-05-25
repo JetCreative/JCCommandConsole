@@ -196,6 +196,123 @@ namespace JetCreative.Console
 
             string commandName = parts[startParamIndex].ToLower();
 
+            // Check if it's a property/field get command
+            if (commandName == "get" && parts.Length >= startParamIndex + 2)
+            {
+                string targetName = parts[startParamIndex + 1].ToLower();
+
+                // Try get property
+                if (properties.TryGetValue(targetName, out PropertyInfo propertyInfo))
+                {
+                    try
+                    {
+                        if (targetGameObjects != null)
+                        {
+                            foreach (var gameObj in targetGameObjects)
+                            {
+                                var component = gameObj.GetComponent(propertyInfo.DeclaringType);
+                                if (component != null)
+                                {
+                                    object getPropertyValue = propertyInfo.GetValue(component);
+                                    ConsoleUI.Instance.Log($"{gameObj.name}: {targetName} = {getPropertyValue}");
+                                }
+                            }
+                            return;
+                        }
+
+                        object target = null;
+                        if (!propertyInfo.GetMethod.IsStatic)
+                        {
+                            if (targetGameObject != null)
+                            {
+                                target = targetGameObject.GetComponent(propertyInfo.DeclaringType);
+                                if (target == null)
+                                {
+                                    ConsoleUI.Instance.LogError($"Component {propertyInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                var instances = FindObjectsOfType(propertyInfo.DeclaringType);
+                                if (instances.Length == 0)
+                                {
+                                    ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType.Name} found in scene");
+                                    return;
+                                }
+                                target = instances[0];
+                            }
+                        }
+
+                        object value = propertyInfo.GetValue(target);
+                        ConsoleUI.Instance.Log($"{targetName} = {value}");
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleUI.Instance.LogError($"Error getting property value: {e.Message}");
+                        return;
+                    }
+                }
+
+                // Try get field
+                if (fields.TryGetValue(targetName, out FieldInfo fieldInfo))
+                {
+                    try
+                    {
+                        if (targetGameObjects != null)
+                        {
+                            foreach (var gameObj in targetGameObjects)
+                            {
+                                var component = gameObj.GetComponent(fieldInfo.DeclaringType);
+                                if (component != null)
+                                {
+                                    object getFieldValue = fieldInfo.GetValue(component);
+                                    ConsoleUI.Instance.Log($"{gameObj.name}: {targetName} = {getFieldValue}");
+                                }
+                            }
+                            return;
+                        }
+
+                        object target = null;
+                        if (!fieldInfo.IsStatic)
+                        {
+                            if (targetGameObject != null)
+                            {
+                                target = targetGameObject.GetComponent(fieldInfo.DeclaringType);
+                                if (target == null)
+                                {
+                                    ConsoleUI.Instance.LogError($"Component {fieldInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                var instances = FindObjectsOfType(fieldInfo.DeclaringType);
+                                if (instances.Length == 0)
+                                {
+                                    ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType.Name} found in scene");
+                                    return;
+                                }
+                                target = instances[0];
+                            }
+                        }
+
+                        object value = fieldInfo.GetValue(target);
+                        ConsoleUI.Instance.Log($"{targetName} = {value}");
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        ConsoleUI.Instance.LogError($"Error getting field value: {e.Message}");
+                        return;
+                    }
+                }
+
+                ConsoleUI.Instance.LogError($"Property or field not found: {targetName}");
+                return;
+            }
+
             // Check if it's a property setting command
             if (commandName == "set" && parts.Length >= startParamIndex + 3)
             {
