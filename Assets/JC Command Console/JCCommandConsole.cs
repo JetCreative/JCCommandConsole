@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using UnityEngine;
 
 namespace JetCreative.Console
@@ -45,9 +46,6 @@ namespace JetCreative.Console
             {
                 Destroy(gameObject);
             }
-            
-            OnTestFloatChanged = (value) => Debug.Log($"TestFloat changed to {value}");
-            TestAction = () => Debug.Log("TestAction invoked");
             
         }
 
@@ -119,17 +117,58 @@ namespace JetCreative.Console
             }
         }
 
+        private GameObject FindTargetGameObject(string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier)) return null;
+
+            // First try to find by exact name
+            GameObject target = GameObject.Find(identifier);
+            if (target != null) return target;
+
+            // Then try to find by tag
+            try {
+                target = GameObject.FindWithTag(identifier);
+                if (target != null) return target;
+            }
+            catch {}
+
+            return null;
+        }
+
         public void ExecuteCommand(string commandInput)
         {
             string[] parts = commandInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0) return;
 
-            string commandName = parts[0].ToLower();
+            GameObject targetGameObject = null;
+            int startParamIndex = 0;
+            
+            // Check if target is specified with @ symbol at start
+            if (parts[0].StartsWith("@"))
+            {
+                string targetIdentifier = parts[0].Substring(1); 
+                targetGameObject = FindTargetGameObject(targetIdentifier);
+                if (targetGameObject == null)
+                {
+                    ConsoleUI.Instance.LogError($"Target GameObject/Tag '{targetIdentifier}' not found");
+                    return;
+                }
+                startParamIndex = 1;
+                
+                if (parts.Length <= startParamIndex)
+                {
+                    ConsoleUI.Instance.LogError("No command specified after target");
+                    return;
+                }
+            }
+
+            string commandName = parts[startParamIndex].ToLower();
 
             // Check if it's a property setting command
-            if (commandName == "set" && parts.Length == 3)
+            if (commandName == "set" && parts.Length >= startParamIndex + 3)
             {
-                string targetName = parts[1].ToLower();
+                string targetName = parts[startParamIndex + 1].ToLower();
+                string value = parts[startParamIndex + 2];
                 
                 // Try set property
                 if (properties.TryGetValue(targetName, out PropertyInfo propertyInfo))
@@ -139,16 +178,28 @@ namespace JetCreative.Console
                         object target = null;
                         if (!propertyInfo.GetMethod.IsStatic)
                         {
-                            var instances = FindObjectsOfType(propertyInfo.DeclaringType);
-                            if (instances.Length == 0)
+                            if (targetGameObject != null)
                             {
-                                ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType.Name} found in scene");
-                                return;
+                                target = targetGameObject.GetComponent(propertyInfo.DeclaringType);
+                                if (target == null)
+                                {
+                                    ConsoleUI.Instance.LogError($"Component {propertyInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    return;
+                                }
                             }
-                            target = instances[0];
+                            else
+                            {
+                                var instances = FindObjectsOfType(propertyInfo.DeclaringType);
+                                if (instances.Length == 0)
+                                {
+                                    ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType.Name} found in scene");
+                                    return;
+                                }
+                                target = instances[0];
+                            }
                         }
 
-                        object convertedValue = Convert.ChangeType(parts[2], propertyInfo.PropertyType);
+                        object convertedValue = Convert.ChangeType(value, propertyInfo.PropertyType);
                         propertyInfo.SetValue(target, convertedValue);
                         ConsoleUI.Instance.Log($"Property {targetName} set to {convertedValue}");
                         return;
@@ -168,16 +219,28 @@ namespace JetCreative.Console
                         object target = null;
                         if (!fieldInfo.IsStatic)
                         {
-                            var instances = FindObjectsOfType(fieldInfo.DeclaringType);
-                            if (instances.Length == 0)
+                            if (targetGameObject != null)
                             {
-                                ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType.Name} found in scene");
-                                return;
+                                target = targetGameObject.GetComponent(fieldInfo.DeclaringType);
+                                if (target == null)
+                                {
+                                    ConsoleUI.Instance.LogError($"Component {fieldInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    return;
+                                }
                             }
-                            target = instances[0];
+                            else
+                            {
+                                var instances = FindObjectsOfType(fieldInfo.DeclaringType);
+                                if (instances.Length == 0)
+                                {
+                                    ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType.Name} found in scene");
+                                    return;
+                                }
+                                target = instances[0];
+                            }
                         }
 
-                        object convertedValue = Convert.ChangeType(parts[2], fieldInfo.FieldType);
+                        object convertedValue = Convert.ChangeType(value, fieldInfo.FieldType);
                         fieldInfo.SetValue(target, convertedValue);
                         ConsoleUI.Instance.Log($"Field {targetName} set to {convertedValue}");
                         return;
@@ -190,48 +253,7 @@ namespace JetCreative.Console
                 }
             }
 
-            // // Check if it's an event invoke command
-            // if (commandName == "invoke" && parts.Length == 2)
-            // {
-            //     string eventName = parts[1].ToLower();
-            //     if (events.TryGetValue(eventName, out EventInfo eventInfo))
-            //     {
-            //         try
-            //         {
-            //             object target = null;
-            //             if (!eventInfo.GetRaiseMethod().IsStatic) 
-            //             {
-            //                 var instances = FindObjectsOfType(eventInfo.DeclaringType);
-            //                 if (instances.Length == 0)
-            //                 {
-            //                     ConsoleUI.Instance.LogError($"No instance of {eventInfo.DeclaringType.Name} found in scene");
-            //                     return;
-            //                 }
-            //                 target = instances[0];
-            //             }
-            //
-            //             var delegateType = eventInfo.EventHandlerType;
-            //             if (delegateType == typeof(Action))
-            //             {
-            //                 var raiseMethod = eventInfo.GetRaiseMethod();
-            //                 raiseMethod?.Invoke(target, new object[] { });
-            //                 ConsoleUI.Instance.Log($"Event {eventName} invoked");
-            //             }
-            //             else
-            //             {
-            //                 ConsoleUI.Instance.LogError($"Event {eventName} has unsupported delegate type");
-            //             }
-            //             return;
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             ConsoleUI.Instance.LogError($"Error invoking event: {e.Message}");
-            //             return;
-            //         }
-            //     }
-            // }
-
-            // Regular method command execution
+            // Regular method command execution 
             if (commands.TryGetValue(commandName, out MethodInfo methodInfo))
             {
                 try
@@ -239,15 +261,16 @@ namespace JetCreative.Console
                     var parameters = methodInfo.GetParameters();
                     object[] paramValues = new object[parameters.Length];
                     
-                    if (parts.Length - 1 != parameters.Length)
+                    int expectedParams = parts.Length - (startParamIndex + 1);
+                    if (expectedParams != parameters.Length)
                     {
-                        ConsoleUI.Instance.LogError($"Invalid number of parameters. Expected {parameters.Length}, got {parts.Length - 1}");
+                        ConsoleUI.Instance.LogError($"Invalid number of parameters. Expected {parameters.Length}, got {expectedParams}");
                         return;
                     }
 
                     for (int i = 0; i < parameters.Length; i++)
                     {
-                        paramValues[i] = Convert.ChangeType(parts[i + 1], parameters[i].ParameterType);
+                        paramValues[i] = Convert.ChangeType(parts[i + startParamIndex + 1], parameters[i].ParameterType);
                     }
 
                     object result = null;
@@ -257,16 +280,30 @@ namespace JetCreative.Console
                     }
                     else
                     {
-                        var instances = FindObjectsOfType(methodInfo.DeclaringType);
-                        if (instances.Length > 0)
+                        object target = null;
+                        if (targetGameObject != null)
                         {
-                            result = methodInfo.Invoke(instances[0], paramValues);
+                            target = targetGameObject.GetComponent(methodInfo.DeclaringType);
+                            if (target == null)
+                            {
+                                ConsoleUI.Instance.LogError($"Component {methodInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                return;
+                            }
                         }
                         else
                         {
-                            ConsoleUI.Instance.LogError($"No instance of {methodInfo.DeclaringType.Name} found in scene");
-                            return;
+                            var instances = FindObjectsOfType(methodInfo.DeclaringType);
+                            if (instances.Length > 0)
+                            {
+                                target = instances[0];
+                            }
+                            else
+                            {
+                                ConsoleUI.Instance.LogError($"No instance of {methodInfo.DeclaringType.Name} found in scene");
+                                return;
+                            }
                         }
+                        result = methodInfo.Invoke(target, paramValues);
                     }
 
                     if (result != null)
@@ -309,7 +346,5 @@ namespace JetCreative.Console
         public int TestInt { get; set; }= 0;
 
         [Command] private float testfloat;
-        [Command] public event Action<float> OnTestFloatChanged;
-        [Command] public static event Action TestAction;
     }
 }
