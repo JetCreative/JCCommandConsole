@@ -56,6 +56,15 @@ namespace JetCreative.Console
         /// to maintain a sequential history of outputs.
         /// </summary>
         private string consoleHistory = "";
+        
+        /// <summary>
+        /// Stores history of commands that have been inputted
+        /// </summary>
+        private List<string> commandHistory = new List<string>();
+        /// <summary>
+        /// Current history pointer
+        /// </summary>
+        private int commandHistoryIndex = 0;
 
         /// Add these new fields to the ConsoleUI class
         private string currentPrediction = "";
@@ -331,6 +340,8 @@ namespace JetCreative.Console
             if (string.IsNullOrEmpty(command)) return;
 
             Log($"> {command}");
+            commandHistory.Add(command);
+            commandHistoryIndex = commandHistory.Count;
             JCCommandConsole.Instance.ExecuteCommand(command);
             inputField.text = "";
             inputField.ActivateInputField();
@@ -353,7 +364,9 @@ namespace JetCreative.Console
             Log($"<color=red>Error: {message}</color>");
         }
 
-        
+        /// <summary>
+        /// Set the input field to match the predictive text.
+        /// </summary>
         public void AcceptPrediction()
         {
             if (string.IsNullOrEmpty(predictionOverlay.text)) return;
@@ -361,6 +374,42 @@ namespace JetCreative.Console
             inputField.text = predictionOverlay.text + " ";
             inputField.caretPosition = inputField.text.Length;
             predictionOverlay.text = "";
+        }
+
+        /// <summary>
+        /// Preload the input field with the next oldest recent command history.
+        /// </summary>
+        public void ReloadLastCommand()
+        {
+            if (commandHistory.Count == 0) return;
+            
+            if (commandHistoryIndex >= commandHistory.Count)
+                commandHistoryIndex = commandHistory.Count - 1;
+            else if (commandHistoryIndex <= 1)
+                commandHistoryIndex = 0;
+            else
+                commandHistoryIndex--;
+            
+            inputField.text = commandHistory[commandHistoryIndex]; 
+        }
+
+        /// <summary>
+        /// Preload the input field with the more recent command history.
+        /// </summary>
+        public void ReloadNextCommand()
+        {
+            Debug.Log("next command history" + commandHistoryIndex + " " + commandHistory.Count);;;
+            
+            if (commandHistory.Count == 0) return;
+            
+            if (commandHistoryIndex >= commandHistory.Count - 2)
+                commandHistoryIndex = commandHistory.Count - 1;
+            else if (commandHistoryIndex < 0)
+                commandHistoryIndex = 0;
+            else
+                commandHistoryIndex++;
+            
+            inputField.text = commandHistory[commandHistoryIndex]; 
         }
 
         /// <summary>

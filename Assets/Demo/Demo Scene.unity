@@ -607,7 +607,7 @@ MonoBehaviour:
     m_SingletonActionBindings: []
     m_Flags: 0
   completePrediction:
-    m_Name: 
+    m_Name: Complete Prediction
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: fc66e432-1e89-4106-b6ca-9b1e55081cab
@@ -616,7 +616,7 @@ MonoBehaviour:
     m_SingletonActionBindings: []
     m_Flags: 0
   enterCommand:
-    m_Name: 
+    m_Name: Enter Command
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: 6d679abd-4b5b-4f86-8644-b0bad815e58a
@@ -625,10 +625,19 @@ MonoBehaviour:
     m_SingletonActionBindings: []
     m_Flags: 0
   lastCommand:
-    m_Name: 
+    m_Name: Last Command
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: 6c40060d-25a3-42d3-8b12-5aa5c5c5eb6c
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  nextCommand:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 8f333665-17a3-4c28-a89c-8ac39df12fe9
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -775,6 +784,23 @@ MonoBehaviour:
       m_Processors: 
       m_Groups: 
       m_Action: Last Command
+      m_Flags: 0
+    m_Flags: 0
+  nextCommand:
+    m_Name: Next Command
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: a59f6eaa-b5e9-416b-826d-997b84147443
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 7481ca06-f33c-47c8-a096-ecee44389166
+      m_Path: <Keyboard>/downArrow
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Next Command
       m_Flags: 0
     m_Flags: 0
   setthisfloat: 0
