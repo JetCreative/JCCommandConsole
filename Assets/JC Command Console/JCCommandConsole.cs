@@ -529,9 +529,9 @@ namespace JetCreative.Console
         }
 
         [Command]
-        public static void Test(float value)
+        public static void Test(float testValue, int testInt)
         {
-            Debug.Log("console test " + value);
+            Debug.Log("console test " + testValue);
         }
 
         [Command]

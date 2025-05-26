@@ -153,16 +153,21 @@ namespace JetCreative.Console
             bool isError = false;
             //List<string> invalidWords = new List<string>();
             //count -1 to skip current word
+            bool IsPrefaceCmd(string word) => JCCommandConsole.Instance.prefaceConsoleCommands.Any(word.StartsWith);
+
+            bool IsPropCmd(string word) => JCCommandConsole.Instance.propertyConsoleCommands.Contains(word);
+
+            bool IsMethod(string word) => JCCommandConsole.Instance.methodCommands.ContainsKey(word);
+
+            bool IsProperty(string word) => JCCommandConsole.Instance.properties.ContainsKey(word);
+
+            bool IsField(string word) => JCCommandConsole.Instance.fields.ContainsKey(word);
+
             for (int i = 0; i < words.Count - 1 ; i++)
             {
                 string word = words[i]; 
                 string prevWord = i > 0 ? words[i - 1] : "";
-                
-                bool IsPrefaceCmd(string word) => JCCommandConsole.Instance.prefaceConsoleCommands.Any(word.StartsWith);
-                bool IsPropCmd(string word) => JCCommandConsole.Instance.propertyConsoleCommands.Contains(word);
-                bool IsMethod(string word) => JCCommandConsole.Instance.methodCommands.ContainsKey(word);
-                bool IsProperty(string word) => JCCommandConsole.Instance.properties.ContainsKey(word);
-                bool IsField(string word) => JCCommandConsole.Instance.fields.ContainsKey(word);
+
                 bool IsParameter()
                 {
                     // Find the last method in previous words
@@ -215,7 +220,7 @@ namespace JetCreative.Console
             string currentWord = words[words.Count - 1].ToLower();
             string previousWord = words.Count > 1 ? words[words.Count - 2].ToLower() : "";
 
-            //Debug.Log("Previous word " + previousWord + " Current word " + currentWord + " Words count " + words.Count);
+            Debug.Log("Previous word " + previousWord + " Current word " + currentWord + " Words count " + words.Count);
 
             // Check if the current word starts with any preface command
             bool startsWithPreface = JCCommandConsole.Instance.prefaceConsoleCommands
@@ -265,10 +270,22 @@ namespace JetCreative.Console
                 var parameters = methodInfo.GetParameters();
                 if (parameters.Length > 0)
                 {
-                    int currentParamIndex = words.Count - 2; // -2 because we exclude method name and start from 0
-                    if (currentParamIndex < parameters.Length)
+                    prediction = text + " ";
+                    
+                    //find words between method command and current word
+                    int currentParamIndex = words.IndexOf(currentWord) - words.FindLastIndex(IsMethod) - 1;
+                    while (currentParamIndex < parameters.Length)
                     {
-                        prediction = $"{text} [{parameters[currentParamIndex].ParameterType.Name} {parameters[currentParamIndex].Name}]";
+                        //convert param name to common name
+                        string commonTypeName = GetCommonTypeName(parameters[currentParamIndex].ParameterType.Name);
+                        
+                        // Add parameter name and type to prediction
+                        prediction += $" [{commonTypeName} {parameters[currentParamIndex].Name}]";
+                        currentParamIndex++;
+                        if (currentParamIndex < parameters.Length) 
+                        {
+                            prediction += ", ";
+                        }
                     }
                 }
             }
@@ -298,16 +315,25 @@ namespace JetCreative.Console
                     }
                 }
             }
-            else if (previousWord == "set")
+            //if last word is a property or field
+            else if (IsProperty(previousWord) || IsField(previousWord))
             {
                 // Show type for property or field if found
-                if (JCCommandConsole.Instance.properties.TryGetValue(currentWord, out PropertyInfo propInfo))
+                if (JCCommandConsole.Instance.properties.TryGetValue(previousWord, out PropertyInfo propInfo))
                 {
-                    prediction = $"{text} [{propInfo.PropertyType.Name}]";
+                    //convert param name to common name
+                    string commonTypeName = GetCommonTypeName(propInfo.PropertyType.Name);
+                        
+                    // Add parameter name and type to prediction
+                    prediction = $"{text} [{commonTypeName}]";
                 }
-                else if (JCCommandConsole.Instance.fields.TryGetValue(currentWord, out FieldInfo fieldInfo))
+                else if (JCCommandConsole.Instance.fields.TryGetValue(previousWord, out FieldInfo fieldInfo))
                 {
-                    prediction = $"{text} [{fieldInfo.FieldType.Name}]";
+                    //convert param name to common name
+                    string commonTypeName = GetCommonTypeName(fieldInfo.FieldType.Name);
+                    
+                    // Add parameter name and type to prediction
+                    prediction = $"{text} [{commonTypeName}]";
                 }
             }
             
@@ -321,7 +347,7 @@ namespace JetCreative.Console
 
             predictionOverlay.text = prediction;
 
-            //Debug.Log(prediction.Length > 0 ? $"Prediction: {prediction}" : "No prediction");
+            Debug.Log(prediction.Length > 0 ? $"Prediction: {prediction}" : "No prediction");
         }
 
         /// <summary>
@@ -373,7 +399,7 @@ namespace JetCreative.Console
 
             inputField.text = predictionOverlay.text + " ";
             inputField.caretPosition = inputField.text.Length;
-            predictionOverlay.text = "";
+            //predictionOverlay.text = "";
         }
 
         /// <summary>
@@ -428,6 +454,16 @@ namespace JetCreative.Console
                     words.RemoveAt(currentIndex);
                 }
             }
+        }
+        
+        private string GetCommonTypeName(string typeName)
+        {
+            return typeName switch
+            {
+                "Single" => "float",
+                "Int32" => "int",
+                _ => typeName
+            };
         }
     }
 }
