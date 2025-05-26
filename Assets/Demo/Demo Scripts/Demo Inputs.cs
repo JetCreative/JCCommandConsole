@@ -88,13 +88,40 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
     ""name"": ""Demo Inputs"",
     ""maps"": [
         {
-            ""name"": ""OpenConsole"",
+            ""name"": ""Console"",
             ""id"": ""75100089-4f58-4c6e-9f80-91c0fe9a2425"",
             ""actions"": [
                 {
                     ""name"": ""OpenWindow"",
                     ""type"": ""Button"",
                     ""id"": ""9408a75a-4669-47b9-8a8e-4894342670fe"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""AcceptPrediction"",
+                    ""type"": ""Button"",
+                    ""id"": ""78e73b7c-7458-4eb5-9455-b4ea4f797234"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Enter"",
+                    ""type"": ""Button"",
+                    ""id"": ""bd840caa-38db-4d98-b495-fa85d1d7d3ce"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""LastInput"",
+                    ""type"": ""Button"",
+                    ""id"": ""7da996dd-2531-47f8-81a7-31187c5c2810"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -112,20 +139,56 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
                     ""action"": ""OpenWindow"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""807a1f64-5980-404a-bdf4-3568a5a85e3f"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""AcceptPrediction"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""40f22533-0e19-4f04-9060-756199566384"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Enter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b0c02306-8a43-4488-b57a-b9ece1d2efbd"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LastInput"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
     ],
     ""controlSchemes"": []
 }");
-        // OpenConsole
-        m_OpenConsole = asset.FindActionMap("OpenConsole", throwIfNotFound: true);
-        m_OpenConsole_OpenWindow = m_OpenConsole.FindAction("OpenWindow", throwIfNotFound: true);
+        // Console
+        m_Console = asset.FindActionMap("Console", throwIfNotFound: true);
+        m_Console_OpenWindow = m_Console.FindAction("OpenWindow", throwIfNotFound: true);
+        m_Console_AcceptPrediction = m_Console.FindAction("AcceptPrediction", throwIfNotFound: true);
+        m_Console_Enter = m_Console.FindAction("Enter", throwIfNotFound: true);
+        m_Console_LastInput = m_Console.FindAction("LastInput", throwIfNotFound: true);
     }
 
     ~@DemoInputs()
     {
-        UnityEngine.Debug.Assert(!m_OpenConsole.enabled, "This will cause a leak and performance issues, DemoInputs.OpenConsole.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_Console.enabled, "This will cause a leak and performance issues, DemoInputs.Console.Disable() has not been called.");
     }
 
     /// <summary>
@@ -198,29 +261,44 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         return asset.FindBinding(bindingMask, out action);
     }
 
-    // OpenConsole
-    private readonly InputActionMap m_OpenConsole;
-    private List<IOpenConsoleActions> m_OpenConsoleActionsCallbackInterfaces = new List<IOpenConsoleActions>();
-    private readonly InputAction m_OpenConsole_OpenWindow;
+    // Console
+    private readonly InputActionMap m_Console;
+    private List<IConsoleActions> m_ConsoleActionsCallbackInterfaces = new List<IConsoleActions>();
+    private readonly InputAction m_Console_OpenWindow;
+    private readonly InputAction m_Console_AcceptPrediction;
+    private readonly InputAction m_Console_Enter;
+    private readonly InputAction m_Console_LastInput;
     /// <summary>
-    /// Provides access to input actions defined in input action map "OpenConsole".
+    /// Provides access to input actions defined in input action map "Console".
     /// </summary>
-    public struct OpenConsoleActions
+    public struct ConsoleActions
     {
         private @DemoInputs m_Wrapper;
 
         /// <summary>
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
-        public OpenConsoleActions(@DemoInputs wrapper) { m_Wrapper = wrapper; }
+        public ConsoleActions(@DemoInputs wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "OpenConsole/OpenWindow".
+        /// Provides access to the underlying input action "Console/OpenWindow".
         /// </summary>
-        public InputAction @OpenWindow => m_Wrapper.m_OpenConsole_OpenWindow;
+        public InputAction @OpenWindow => m_Wrapper.m_Console_OpenWindow;
+        /// <summary>
+        /// Provides access to the underlying input action "Console/AcceptPrediction".
+        /// </summary>
+        public InputAction @AcceptPrediction => m_Wrapper.m_Console_AcceptPrediction;
+        /// <summary>
+        /// Provides access to the underlying input action "Console/Enter".
+        /// </summary>
+        public InputAction @Enter => m_Wrapper.m_Console_Enter;
+        /// <summary>
+        /// Provides access to the underlying input action "Console/LastInput".
+        /// </summary>
+        public InputAction @LastInput => m_Wrapper.m_Console_LastInput;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_OpenConsole; }
+        public InputActionMap Get() { return m_Wrapper.m_Console; }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
         public void Enable() { Get().Enable(); }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
@@ -228,9 +306,9 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
         public bool enabled => Get().enabled;
         /// <summary>
-        /// Implicitly converts an <see ref="OpenConsoleActions" /> to an <see ref="InputActionMap" /> instance.
+        /// Implicitly converts an <see ref="ConsoleActions" /> to an <see ref="InputActionMap" /> instance.
         /// </summary>
-        public static implicit operator InputActionMap(OpenConsoleActions set) { return set.Get(); }
+        public static implicit operator InputActionMap(ConsoleActions set) { return set.Get(); }
         /// <summary>
         /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
         /// </summary>
@@ -238,14 +316,23 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
         /// </remarks>
-        /// <seealso cref="OpenConsoleActions" />
-        public void AddCallbacks(IOpenConsoleActions instance)
+        /// <seealso cref="ConsoleActions" />
+        public void AddCallbacks(IConsoleActions instance)
         {
-            if (instance == null || m_Wrapper.m_OpenConsoleActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_OpenConsoleActionsCallbackInterfaces.Add(instance);
+            if (instance == null || m_Wrapper.m_ConsoleActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_ConsoleActionsCallbackInterfaces.Add(instance);
             @OpenWindow.started += instance.OnOpenWindow;
             @OpenWindow.performed += instance.OnOpenWindow;
             @OpenWindow.canceled += instance.OnOpenWindow;
+            @AcceptPrediction.started += instance.OnAcceptPrediction;
+            @AcceptPrediction.performed += instance.OnAcceptPrediction;
+            @AcceptPrediction.canceled += instance.OnAcceptPrediction;
+            @Enter.started += instance.OnEnter;
+            @Enter.performed += instance.OnEnter;
+            @Enter.canceled += instance.OnEnter;
+            @LastInput.started += instance.OnLastInput;
+            @LastInput.performed += instance.OnLastInput;
+            @LastInput.canceled += instance.OnLastInput;
         }
 
         /// <summary>
@@ -254,21 +341,30 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// <remarks>
         /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
         /// </remarks>
-        /// <seealso cref="OpenConsoleActions" />
-        private void UnregisterCallbacks(IOpenConsoleActions instance)
+        /// <seealso cref="ConsoleActions" />
+        private void UnregisterCallbacks(IConsoleActions instance)
         {
             @OpenWindow.started -= instance.OnOpenWindow;
             @OpenWindow.performed -= instance.OnOpenWindow;
             @OpenWindow.canceled -= instance.OnOpenWindow;
+            @AcceptPrediction.started -= instance.OnAcceptPrediction;
+            @AcceptPrediction.performed -= instance.OnAcceptPrediction;
+            @AcceptPrediction.canceled -= instance.OnAcceptPrediction;
+            @Enter.started -= instance.OnEnter;
+            @Enter.performed -= instance.OnEnter;
+            @Enter.canceled -= instance.OnEnter;
+            @LastInput.started -= instance.OnLastInput;
+            @LastInput.performed -= instance.OnLastInput;
+            @LastInput.canceled -= instance.OnLastInput;
         }
 
         /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="OpenConsoleActions.UnregisterCallbacks(IOpenConsoleActions)" />.
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="ConsoleActions.UnregisterCallbacks(IConsoleActions)" />.
         /// </summary>
-        /// <seealso cref="OpenConsoleActions.UnregisterCallbacks(IOpenConsoleActions)" />
-        public void RemoveCallbacks(IOpenConsoleActions instance)
+        /// <seealso cref="ConsoleActions.UnregisterCallbacks(IConsoleActions)" />
+        public void RemoveCallbacks(IConsoleActions instance)
         {
-            if (m_Wrapper.m_OpenConsoleActionsCallbackInterfaces.Remove(instance))
+            if (m_Wrapper.m_ConsoleActionsCallbackInterfaces.Remove(instance))
                 UnregisterCallbacks(instance);
         }
 
@@ -278,27 +374,27 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
         /// </remarks>
-        /// <seealso cref="OpenConsoleActions.AddCallbacks(IOpenConsoleActions)" />
-        /// <seealso cref="OpenConsoleActions.RemoveCallbacks(IOpenConsoleActions)" />
-        /// <seealso cref="OpenConsoleActions.UnregisterCallbacks(IOpenConsoleActions)" />
-        public void SetCallbacks(IOpenConsoleActions instance)
+        /// <seealso cref="ConsoleActions.AddCallbacks(IConsoleActions)" />
+        /// <seealso cref="ConsoleActions.RemoveCallbacks(IConsoleActions)" />
+        /// <seealso cref="ConsoleActions.UnregisterCallbacks(IConsoleActions)" />
+        public void SetCallbacks(IConsoleActions instance)
         {
-            foreach (var item in m_Wrapper.m_OpenConsoleActionsCallbackInterfaces)
+            foreach (var item in m_Wrapper.m_ConsoleActionsCallbackInterfaces)
                 UnregisterCallbacks(item);
-            m_Wrapper.m_OpenConsoleActionsCallbackInterfaces.Clear();
+            m_Wrapper.m_ConsoleActionsCallbackInterfaces.Clear();
             AddCallbacks(instance);
         }
     }
     /// <summary>
-    /// Provides a new <see cref="OpenConsoleActions" /> instance referencing this action map.
+    /// Provides a new <see cref="ConsoleActions" /> instance referencing this action map.
     /// </summary>
-    public OpenConsoleActions @OpenConsole => new OpenConsoleActions(this);
+    public ConsoleActions @Console => new ConsoleActions(this);
     /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "OpenConsole" which allows adding and removing callbacks.
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Console" which allows adding and removing callbacks.
     /// </summary>
-    /// <seealso cref="OpenConsoleActions.AddCallbacks(IOpenConsoleActions)" />
-    /// <seealso cref="OpenConsoleActions.RemoveCallbacks(IOpenConsoleActions)" />
-    public interface IOpenConsoleActions
+    /// <seealso cref="ConsoleActions.AddCallbacks(IConsoleActions)" />
+    /// <seealso cref="ConsoleActions.RemoveCallbacks(IConsoleActions)" />
+    public interface IConsoleActions
     {
         /// <summary>
         /// Method invoked when associated input action "OpenWindow" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
@@ -307,5 +403,26 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnOpenWindow(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "AcceptPrediction" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnAcceptPrediction(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Enter" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnEnter(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "LastInput" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnLastInput(InputAction.CallbackContext context);
     }
 }

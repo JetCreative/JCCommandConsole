@@ -15,10 +15,15 @@ namespace JetCreative.Console
     {
         private static JCCommandConsole instance;
 
-        private Dictionary<string, MethodInfo> commands = new Dictionary<string, MethodInfo>();
-        private Dictionary<string, PropertyInfo> properties = new Dictionary<string, PropertyInfo>();
-        private Dictionary<string, FieldInfo> fields = new Dictionary<string, FieldInfo>();
+        public Dictionary<string, MethodInfo> methodCommands { get; private set; }= new Dictionary<string, MethodInfo>();
+        
+        public Dictionary<string, PropertyInfo> properties { get; private set; }= new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, FieldInfo> fields { get; private set; }= new Dictionary<string, FieldInfo>();
         //private Dictionary<string, EventInfo> events = new Dictionary<string, EventInfo>();
+        
+        public string[] prefaceConsoleCommands { get; private set; }= new string[] { "@", "@@"};
+        public string[] propertyConsoleCommands { get; private set; }= new string[] { "get", "set"};
+        
 
         public static JCCommandConsole Instance
         {
@@ -68,7 +73,7 @@ namespace JetCreative.Console
                         if (commandAttribute != null)
                         {
                             string commandName = commandAttribute.CommandName ?? method.Name.ToLower();
-                            commands[commandName] = method;
+                            this.methodCommands[commandName] = method;
                         }
                     }
 
@@ -433,7 +438,7 @@ namespace JetCreative.Console
             }
 
             // Regular method command execution 
-            if (commands.TryGetValue(commandName, out MethodInfo methodInfo))
+            if (methodCommands.TryGetValue(commandName, out MethodInfo methodInfo))
             {
                 try
                 {
@@ -524,9 +529,9 @@ namespace JetCreative.Console
         }
 
         [Command]
-        public static void Test()
+        public static void Test(float value)
         {
-            Debug.Log("console test");
+            Debug.Log("console test " + value);
         }
 
         [Command]
@@ -542,5 +547,7 @@ namespace JetCreative.Console
         public int TestInt { get; set; }= 0;
 
         [Command] private float testfloat;
+
+        
     }
 }

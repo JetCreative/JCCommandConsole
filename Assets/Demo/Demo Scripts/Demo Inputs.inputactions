@@ -2,13 +2,40 @@
     "name": "Demo Inputs",
     "maps": [
         {
-            "name": "OpenConsole",
+            "name": "Console",
             "id": "75100089-4f58-4c6e-9f80-91c0fe9a2425",
             "actions": [
                 {
                     "name": "OpenWindow",
                     "type": "Button",
                     "id": "9408a75a-4669-47b9-8a8e-4894342670fe",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "AcceptPrediction",
+                    "type": "Button",
+                    "id": "78e73b7c-7458-4eb5-9455-b4ea4f797234",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Enter",
+                    "type": "Button",
+                    "id": "bd840caa-38db-4d98-b495-fa85d1d7d3ce",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "LastInput",
+                    "type": "Button",
+                    "id": "7da996dd-2531-47f8-81a7-31187c5c2810",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -24,6 +51,39 @@
                     "processors": "",
                     "groups": "",
                     "action": "OpenWindow",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "807a1f64-5980-404a-bdf4-3568a5a85e3f",
+                    "path": "<Keyboard>/tab",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AcceptPrediction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "40f22533-0e19-4f04-9060-756199566384",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Enter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b0c02306-8a43-4488-b57a-b9ece1d2efbd",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "LastInput",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
