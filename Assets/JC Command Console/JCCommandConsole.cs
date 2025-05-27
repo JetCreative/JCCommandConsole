@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using JetCreative.CommandConsolePro;
 using UnityEngine;
 #pragma warning disable CS0618 // Type or member is obsolete
 

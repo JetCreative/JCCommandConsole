@@ -1,4 +1,5 @@
-﻿using JetCreative.Console;
+﻿using JetCreative.CommandConsolePro;
+using JetCreative.Console;
 using UnityEngine;
 
 namespace Demo.Demo_Scripts
