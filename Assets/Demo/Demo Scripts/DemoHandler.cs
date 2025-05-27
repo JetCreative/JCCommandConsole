@@ -1,15 +1,12 @@
-﻿using System;
-using JetCreative.Console;
+﻿using JetCreative.Console;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Serialization;
 
 namespace Demo.Demo_Scripts
 {
-    [RequireComponent(typeof(PlayerInput))]
+    
     public class DemoHandler: MonoBehaviour
     {
-        //[FormerlySerializedAs("openConsoleAction")] [SerializeField] private InputActionReference consoleActions;
         [SerializeField] private InputAction openAction, completePrediction, enterCommand, lastCommand, nextCommand;
 
         private void Awake()
@@ -41,8 +38,6 @@ namespace Demo.Demo_Scripts
             lastCommand.Disable();
             nextCommand.Disable();
         }
-
-        [Command]public float setthisfloat;
 
     }
 }

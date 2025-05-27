@@ -60,16 +60,15 @@ namespace JetCreative.Console
         /// <summary>
         /// Stores history of commands that have been inputted
         /// </summary>
-        private List<string> commandHistory = new List<string>();
+        private readonly List<string> commandHistory = new List<string>();
         /// <summary>
         /// Current history pointer
         /// </summary>
-        private int commandHistoryIndex = 0;
+        private int commandHistoryIndex;
 
         /// Add these new fields to the ConsoleUI class
-        private string currentPrediction = "";
         [SerializeField] private TMP_Text predictionOverlay;
-        private Color predictionColor = new Color(0.7f, 0.7f, 0.7f, 0.5f); // Light gray, semi-transparent
+        private readonly Color predictionColor = new Color(0.7f, 0.7f, 0.7f, 0.5f); // Light gray, semi-transparent
 
         /// Provides a singleton instance of the ConsoleUI class. This property ensures that
         /// there is only one active instance of the ConsoleUI in the scene. If the instance
@@ -87,11 +86,7 @@ namespace JetCreative.Console
             }
         }
 
-        /// <summary>
-        /// Called by Unity when the script instance is being loaded.
-        /// Initializes the console user interface by setting up event listeners for UI elements
-        /// like submit and exit buttons, as well as the input field's submission.
-        /// </summary>
+        
         private void Awake()
         {
             InitializeUI();
@@ -101,7 +96,7 @@ namespace JetCreative.Console
         /// Initializes the console user interface components by setting up event listeners for user interaction.
         /// </summary>
         /// <remarks>
-        /// This method connects the submit and exit buttons to their respective callback handlers.
+        /// This method connects submit and exit buttons to their respective callback handlers.
         /// Additionally, it configures the input field to handle the submission of text commands upon user input.
         /// </remarks>
         private void InitializeUI()
@@ -120,7 +115,7 @@ namespace JetCreative.Console
             predictionOverlay.color = predictionColor;
             predictionOverlay.alignment = inputField.textComponent.alignment;
             
-            // Match the position and size with input field's text component
+            // Match the position and size with the input field's text component
             RectTransform predRect = predictionOverlay.GetComponent<RectTransform>();
             RectTransform inputRect = inputField.textComponent.GetComponent<RectTransform>();
             predRect.anchorMin = inputRect.anchorMin;
@@ -138,7 +133,7 @@ namespace JetCreative.Console
             string prediction = "";
             
             // Split input into words split by a space
-            List<string> words = text.Split(new[] { ' ' }, StringSplitOptions.None).ToList();;
+            List<string> words = text.Split(new[] { ' ' }, StringSplitOptions.None).ToList();
 
             RemoveConsecutiveEmptyEntries(words);
             
@@ -152,16 +147,16 @@ namespace JetCreative.Console
             //check for invalid words
             bool isError = false;
             //List<string> invalidWords = new List<string>();
-            //count -1 to skip current word
-            bool IsPrefaceCmd(string word) => JCCommandConsole.Instance.prefaceConsoleCommands.Any(word.StartsWith);
+            //count -1 to skip the current word
+            bool IsPrefaceCmd(string word) => JCCommandConsole.Instance.PrefaceConsoleCommands.Any(word.StartsWith);
 
-            bool IsPropCmd(string word) => JCCommandConsole.Instance.propertyConsoleCommands.Contains(word);
+            bool IsPropCmd(string word) => JCCommandConsole.Instance.PropertyConsoleCommands.Contains(word);
 
-            bool IsMethod(string word) => JCCommandConsole.Instance.methodCommands.ContainsKey(word);
+            bool IsMethod(string word) => JCCommandConsole.Instance.MethodCommands.ContainsKey(word);
 
-            bool IsProperty(string word) => JCCommandConsole.Instance.properties.ContainsKey(word);
+            bool IsProperty(string word) => JCCommandConsole.Instance.Properties.ContainsKey(word);
 
-            bool IsField(string word) => JCCommandConsole.Instance.fields.ContainsKey(word);
+            bool IsField(string word) => JCCommandConsole.Instance.Fields.ContainsKey(word);
 
             for (int i = 0; i < words.Count - 1 ; i++)
             {
@@ -171,10 +166,10 @@ namespace JetCreative.Console
                 bool IsParameter()
                 {
                     // Find the last method in previous words
-                    var lastMethodWord = words.Take(i).LastOrDefault(w => IsMethod(w));
+                    var lastMethodWord = words.Take(i).LastOrDefault(IsMethod);
                     if (lastMethodWord != null)
                     {
-                        var methodInfo = JCCommandConsole.Instance.methodCommands[lastMethodWord];
+                        var methodInfo = JCCommandConsole.Instance.MethodCommands[lastMethodWord];
                         var parameters = methodInfo.GetParameters();
                         // Calculate parameter position (skip method name and count from there)
                         int paramPosition = i - words.IndexOf(lastMethodWord) - 1;
@@ -185,8 +180,8 @@ namespace JetCreative.Console
                     if (i >= 2 && words[i-1] != null)
                     {
                         var twoWordsAgo = words[i - 2];
-                        var prevWord = words[i - 1];
-                        if (twoWordsAgo == "set" && (IsProperty(prevWord) || IsField(prevWord)))
+                        var lastWord = words[i - 1];
+                        if (twoWordsAgo == "set" && (IsProperty(lastWord) || IsField(lastWord)))
                         {
                             return true;
                         }
@@ -196,7 +191,7 @@ namespace JetCreative.Console
                 }
 
                 bool wordIsValid =
-                    //preface symbols are only valid on first word
+                    //preface symbols are only valid on the first word
                     (IsPrefaceCmd(word) && i == 0)
                     //Prop cmds are invalid after methods or properties or fields
                     || (IsPropCmd(word) && !words.Take(i).Any(w => IsMethod(w) || IsProperty(w) || IsField(w) || IsPropCmd(w)))
@@ -220,26 +215,26 @@ namespace JetCreative.Console
             string currentWord = words[words.Count - 1].ToLower();
             string previousWord = words.Count > 1 ? words[words.Count - 2].ToLower() : "";
 
-            Debug.Log("Previous word " + previousWord + " Current word " + currentWord + " Words count " + words.Count);
+            //Debug.Log("Previous word " + previousWord + " Current word " + currentWord + " Words count " + words.Count);
 
             // Check if the current word starts with any preface command
-            bool startsWithPreface = JCCommandConsole.Instance.prefaceConsoleCommands
+            bool startsWithPreface = JCCommandConsole.Instance.PrefaceConsoleCommands
                 .Any(preface => currentWord.StartsWith(preface));
-            //if so then predict nothing
+            //if so, then predict nothing
             if (startsWithPreface)
             {
                 predictionOverlay.text = "";
                 return;
             }
             
-            bool lastWasPreface = JCCommandConsole.Instance.prefaceConsoleCommands
+            bool lastWasPreface = JCCommandConsole.Instance.PrefaceConsoleCommands
                 .Any(preface => previousWord.StartsWith(preface));
 
-            //This is first word or previous word starts with a preface command
+            //This is the first word or previous word starts with a preface command
             if (lastWasPreface || string.IsNullOrEmpty(previousWord))
             {
                 // Predict method names from methodCommands
-                var methodPredictions = JCCommandConsole.Instance.methodCommands.Keys
+                var methodPredictions = JCCommandConsole.Instance.MethodCommands.Keys
                     .Where(cmd => cmd.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(cmd => cmd)
                     .FirstOrDefault();
@@ -251,7 +246,7 @@ namespace JetCreative.Console
                 else
                 {
                     // If no method predictions, try property console commands
-                    var propCommandPrediction = JCCommandConsole.Instance.propertyConsoleCommands
+                    var propCommandPrediction = JCCommandConsole.Instance.PropertyConsoleCommands
                         .Where(cmd => cmd.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase))
                         .OrderBy(cmd => cmd)
                         .FirstOrDefault();
@@ -263,10 +258,10 @@ namespace JetCreative.Console
                 }
             }
             //following a method
-            else if (JCCommandConsole.Instance.methodCommands.ContainsKey(previousWord))
+            else if (JCCommandConsole.Instance.MethodCommands.ContainsKey(previousWord))
             {
                 // Show parameter info for the method
-                var methodInfo = JCCommandConsole.Instance.methodCommands[previousWord];
+                var methodInfo = JCCommandConsole.Instance.MethodCommands[previousWord];
                 var parameters = methodInfo.GetParameters();
                 if (parameters.Length > 0)
                 {
@@ -277,10 +272,14 @@ namespace JetCreative.Console
                     while (currentParamIndex < parameters.Length)
                     {
                         //convert param name to common name
-                        string commonTypeName = GetCommonTypeName(parameters[currentParamIndex].ParameterType.Name);
+                        if (currentParamIndex >= 0 && currentParamIndex < parameters.Length)
+                        {
+                            string commonTypeName = GetCommonTypeName(parameters[currentParamIndex].ParameterType.Name);
                         
-                        // Add parameter name and type to prediction
-                        prediction += $" [{commonTypeName} {parameters[currentParamIndex].Name}]";
+                            // Add parameter name and type to prediction
+                            prediction += $" [{commonTypeName} {parameters[currentParamIndex].Name}]";
+                        }
+
                         currentParamIndex++;
                         if (currentParamIndex < parameters.Length) 
                         {
@@ -290,10 +289,10 @@ namespace JetCreative.Console
                 }
             }
             //following a property or field console command e.g. "get" or "set"
-            else if (JCCommandConsole.Instance.propertyConsoleCommands.Contains(previousWord))
+            else if (JCCommandConsole.Instance.PropertyConsoleCommands.Contains(previousWord))
             {
                 // Predict property or field names
-                var propertyPrediction = JCCommandConsole.Instance.properties.Keys
+                var propertyPrediction = JCCommandConsole.Instance.Properties.Keys
                     .Where(prop => prop.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(prop => prop)
                     .FirstOrDefault();
@@ -304,7 +303,7 @@ namespace JetCreative.Console
                 }
                 else
                 {
-                    var fieldPrediction = JCCommandConsole.Instance.fields.Keys
+                    var fieldPrediction = JCCommandConsole.Instance.Fields.Keys
                         .Where(field => field.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase))
                         .OrderBy(field => field)
                         .FirstOrDefault();
@@ -315,11 +314,11 @@ namespace JetCreative.Console
                     }
                 }
             }
-            //if last word is a property or field
+            //if the last word is a property or field
             else if (IsProperty(previousWord) || IsField(previousWord))
             {
                 // Show type for property or field if found
-                if (JCCommandConsole.Instance.properties.TryGetValue(previousWord, out PropertyInfo propInfo))
+                if (JCCommandConsole.Instance.Properties.TryGetValue(previousWord, out PropertyInfo propInfo))
                 {
                     //convert param name to common name
                     string commonTypeName = GetCommonTypeName(propInfo.PropertyType.Name);
@@ -327,7 +326,7 @@ namespace JetCreative.Console
                     // Add parameter name and type to prediction
                     prediction = $"{text} [{commonTypeName}]";
                 }
-                else if (JCCommandConsole.Instance.fields.TryGetValue(previousWord, out FieldInfo fieldInfo))
+                else if (JCCommandConsole.Instance.Fields.TryGetValue(previousWord, out FieldInfo fieldInfo))
                 {
                     //convert param name to common name
                     string commonTypeName = GetCommonTypeName(fieldInfo.FieldType.Name);
@@ -337,7 +336,7 @@ namespace JetCreative.Console
                 }
             }
             
-            //if error then add message at end of prediction
+            //if error, then add a message at the end of the prediction
             if (isError)
             {
                 prediction = prediction.Length > 0 
@@ -347,11 +346,11 @@ namespace JetCreative.Console
 
             predictionOverlay.text = prediction;
 
-            Debug.Log(prediction.Length > 0 ? $"Prediction: {prediction}" : "No prediction");
+            //Debug.Log(prediction.Length > 0 ? $"Prediction: {prediction}" : "No prediction");
         }
 
         /// <summary>
-        /// Handles the submission of commands entered in the console input field.
+        /// Handles the submission of commands entered the console input field.
         /// This method is invoked when the submit button is clicked or when the user presses Enter in the input field.
         /// </summary>
         /// <remarks>
@@ -424,8 +423,6 @@ namespace JetCreative.Console
         /// </summary>
         public void ReloadNextCommand()
         {
-            Debug.Log("next command history" + commandHistoryIndex + " " + commandHistory.Count);;;
-            
             if (commandHistory.Count == 0) return;
             
             if (commandHistoryIndex >= commandHistory.Count - 2)

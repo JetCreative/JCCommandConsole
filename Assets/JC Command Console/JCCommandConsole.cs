@@ -3,47 +3,48 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using UnityEngine;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace JetCreative.Console
 {
     /// <summary>
-    /// JCCommandConsole is a central class responsible for managing and executing console commands in game.
+    /// JCCommandConsole is a central class responsible for managing and executing console commands in a game.
     /// It provides functionalities for registering and executing commands,
     /// enabling or disabling the console UI, and integrating commands decorated with the <c>Command</c> attribute.
     /// </summary>
     public class JCCommandConsole : MonoBehaviour
     {
-        private static JCCommandConsole instance;
+        private static JCCommandConsole _instance;
 
-        public Dictionary<string, MethodInfo> methodCommands { get; private set; }= new Dictionary<string, MethodInfo>();
+        public Dictionary<string, MethodInfo> MethodCommands { get; private set; }= new Dictionary<string, MethodInfo>();
         
-        public Dictionary<string, PropertyInfo> properties { get; private set; }= new Dictionary<string, PropertyInfo>();
-        public Dictionary<string, FieldInfo> fields { get; private set; }= new Dictionary<string, FieldInfo>();
+        public Dictionary<string, PropertyInfo> Properties { get; private set; }= new Dictionary<string, PropertyInfo>();
+        public Dictionary<string, FieldInfo> Fields { get; private set; }= new Dictionary<string, FieldInfo>();
         //private Dictionary<string, EventInfo> events = new Dictionary<string, EventInfo>();
         
-        public string[] prefaceConsoleCommands { get; private set; }= new string[] { "@", "@@"};
-        public string[] propertyConsoleCommands { get; private set; }= new string[] { "get", "set"};
+        public string[] PrefaceConsoleCommands { get; private set; }= new string[] { "@", "@@"};
+        public string[] PropertyConsoleCommands { get; private set; }= new string[] { "get", "set"};
         
 
         public static JCCommandConsole Instance
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
                     GameObject go = new GameObject("CommandConsole");
-                    instance = go.AddComponent<JCCommandConsole>();
+                    _instance = go.AddComponent<JCCommandConsole>();
                     DontDestroyOnLoad(go);
                 }
-                return instance;
+                return _instance;
             }
         }
 
         private void Awake()
         {
-            if (instance == null)
+            if (_instance == null)
             {
-                instance = this;
+                _instance = this;
                 DontDestroyOnLoad(gameObject);
                 RegisterCommands();
             }
@@ -73,7 +74,7 @@ namespace JetCreative.Console
                         if (commandAttribute != null)
                         {
                             string commandName = commandAttribute.CommandName ?? method.Name.ToLower();
-                            this.methodCommands[commandName] = method;
+                            this.MethodCommands[commandName] = method;
                         }
                     }
 
@@ -87,7 +88,7 @@ namespace JetCreative.Console
                         if (commandAttribute != null)
                         {
                             string propertyName = commandAttribute.CommandName ?? property.Name.ToLower();
-                            this.properties[propertyName] = property;
+                            this.Properties[propertyName] = property;
                         }
                     }
 
@@ -101,7 +102,7 @@ namespace JetCreative.Console
                         if (commandAttribute != null)
                         {
                             string fieldName = commandAttribute.CommandName ?? field.Name.ToLower();
-                            this.fields[fieldName] = field;
+                            this.Fields[fieldName] = field;
                         }
                     }
 
@@ -126,21 +127,24 @@ namespace JetCreative.Console
         {
             if (string.IsNullOrEmpty(identifier)) return null;
 
-            // First try to find by exact name (case insensitive)
+            // First, try to find by exact name (case-insensitive)
             GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>();
             GameObject target = allObjects.FirstOrDefault(obj => obj.name.Equals(identifier, StringComparison.OrdinalIgnoreCase));
             if (target != null) return target;
 
-            // Then try to find by tag (case insensitive)
+            // Then try to find by tag (case-insensitive)
             string[] allTags = UnityEditorInternal.InternalEditorUtility.tags;
-            string matchingTag = allTags.FirstOrDefault(tag => tag.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            string matchingTag = allTags.FirstOrDefault(tagName => tagName.Equals(identifier, StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrEmpty(matchingTag))
             {
                 try {
                     target = GameObject.FindWithTag(matchingTag);
                     if (target != null) return target;
                 }
-                catch {}
+                catch
+                {
+                    // ignored
+                }
             }
 
             return null;
@@ -163,7 +167,7 @@ namespace JetCreative.Console
             GameObject targetGameObject = null;
             int startParamIndex = 0;
             
-            // Check if target is specified with @@ or @ symbol at start
+            // Check if the target is specified with @@ or @ symbol at the start
             if (parts[0].StartsWith("@@"))
             {
                 string targetIdentifier = parts[0].Substring(2);
@@ -206,8 +210,8 @@ namespace JetCreative.Console
             {
                 string targetName = parts[startParamIndex + 1].ToLower();
 
-                // Try get property
-                if (properties.TryGetValue(targetName, out PropertyInfo propertyInfo))
+                // Try to get property
+                if (Properties.TryGetValue(targetName, out PropertyInfo propertyInfo))
                 {
                     try
                     {
@@ -233,7 +237,7 @@ namespace JetCreative.Console
                                 target = targetGameObject.GetComponent(propertyInfo.DeclaringType);
                                 if (target == null)
                                 {
-                                    ConsoleUI.Instance.LogError($"Component {propertyInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    ConsoleUI.Instance.LogError($"Component {propertyInfo.DeclaringType?.Name} not found on {targetGameObject.name}");
                                     return;
                                 }
                             }
@@ -242,7 +246,7 @@ namespace JetCreative.Console
                                 var instances = FindObjectsOfType(propertyInfo.DeclaringType);
                                 if (instances.Length == 0)
                                 {
-                                    ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType.Name} found in scene");
+                                    ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType?.Name} found in scene");
                                     return;
                                 }
                                 target = instances[0];
@@ -260,8 +264,8 @@ namespace JetCreative.Console
                     }
                 }
 
-                // Try get field
-                if (fields.TryGetValue(targetName, out FieldInfo fieldInfo))
+                // Try to get field
+                if (Fields.TryGetValue(targetName, out FieldInfo fieldInfo))
                 {
                     try
                     {
@@ -287,7 +291,7 @@ namespace JetCreative.Console
                                 target = targetGameObject.GetComponent(fieldInfo.DeclaringType);
                                 if (target == null)
                                 {
-                                    ConsoleUI.Instance.LogError($"Component {fieldInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    ConsoleUI.Instance.LogError($"Component {fieldInfo.DeclaringType?.Name} not found on {targetGameObject.name}");
                                     return;
                                 }
                             }
@@ -296,7 +300,7 @@ namespace JetCreative.Console
                                 var instances = FindObjectsOfType(fieldInfo.DeclaringType);
                                 if (instances.Length == 0)
                                 {
-                                    ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType.Name} found in scene");
+                                    ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType?.Name} found in scene");
                                     return;
                                 }
                                 target = instances[0];
@@ -324,8 +328,8 @@ namespace JetCreative.Console
                 string targetName = parts[startParamIndex + 1].ToLower();
                 string value = parts[startParamIndex + 2];
                 
-                // Try set property
-                if (properties.TryGetValue(targetName, out PropertyInfo propertyInfo))
+                // Try to set property
+                if (Properties.TryGetValue(targetName, out PropertyInfo propertyInfo))
                 {
                     try
                     {
@@ -352,7 +356,7 @@ namespace JetCreative.Console
                                 target = targetGameObject.GetComponent(propertyInfo.DeclaringType);
                                 if (target == null)
                                 {
-                                    ConsoleUI.Instance.LogError($"Component {propertyInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    ConsoleUI.Instance.LogError($"Component {propertyInfo.DeclaringType?.Name} not found on {targetGameObject.name}");
                                     return;
                                 }
                             }
@@ -361,7 +365,7 @@ namespace JetCreative.Console
                                 var instances = FindObjectsOfType(propertyInfo.DeclaringType);
                                 if (instances.Length == 0)
                                 {
-                                    ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType.Name} found in scene");
+                                    ConsoleUI.Instance.LogError($"No instance of {propertyInfo.DeclaringType?.Name} found in scene");
                                     return;
                                 }
                                 target = instances[0];
@@ -381,7 +385,7 @@ namespace JetCreative.Console
                 }
 
                 // Try set field
-                if (fields.TryGetValue(targetName, out FieldInfo fieldInfo))
+                if (Fields.TryGetValue(targetName, out FieldInfo fieldInfo))
                 {
                     try
                     {
@@ -408,7 +412,7 @@ namespace JetCreative.Console
                                 target = targetGameObject.GetComponent(fieldInfo.DeclaringType);
                                 if (target == null)
                                 {
-                                    ConsoleUI.Instance.LogError($"Component {fieldInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                    ConsoleUI.Instance.LogError($"Component {fieldInfo.DeclaringType?.Name} not found on {targetGameObject.name}");
                                     return;
                                 }
                             }
@@ -417,7 +421,7 @@ namespace JetCreative.Console
                                 var instances = FindObjectsOfType(fieldInfo.DeclaringType);
                                 if (instances.Length == 0)
                                 {
-                                    ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType.Name} found in scene");
+                                    ConsoleUI.Instance.LogError($"No instance of {fieldInfo.DeclaringType?.Name} found in scene");
                                     return;
                                 }
                                 target = instances[0];
@@ -438,7 +442,7 @@ namespace JetCreative.Console
             }
 
             // Regular method command execution 
-            if (methodCommands.TryGetValue(commandName, out MethodInfo methodInfo))
+            if (MethodCommands.TryGetValue(commandName, out MethodInfo methodInfo))
             {
                 try
                 {
@@ -487,7 +491,7 @@ namespace JetCreative.Console
                             target = targetGameObject.GetComponent(methodInfo.DeclaringType);
                             if (target == null)
                             {
-                                ConsoleUI.Instance.LogError($"Component {methodInfo.DeclaringType.Name} not found on {targetGameObject.name}");
+                                ConsoleUI.Instance.LogError($"Component {methodInfo.DeclaringType?.Name} not found on {targetGameObject.name}");
                                 return;
                             }
                         }
@@ -500,7 +504,7 @@ namespace JetCreative.Console
                             }
                             else
                             {
-                                ConsoleUI.Instance.LogError($"No instance of {methodInfo.DeclaringType.Name} found in scene");
+                                ConsoleUI.Instance.LogError($"No instance of {methodInfo.DeclaringType?.Name} found in scene");
                                 return;
                             }
                         }
@@ -523,30 +527,12 @@ namespace JetCreative.Console
             }
         }
 
-        public void EnableConsole(bool enabled)
+        public void EnableConsole(bool shouldEnable)
         {
-            ConsoleUI.Instance.gameObject.SetActive(enabled);
+            ConsoleUI.Instance.gameObject.SetActive(shouldEnable);
         }
 
-        [Command]
-        public static void Test(float testValue, int testInt)
-        {
-            Debug.Log("console test " + testValue);
-        }
-
-        [Command]
-        public bool CheckConsole()
-        {
-            return ConsoleUI.Instance.gameObject.activeSelf;
-        }
-
-        [Command("addition")]
-        public float AdditionTime(float a, float b) => a + b;
-
-        [Command]
-        public int TestInt { get; set; }= 0;
-
-        [Command] private float testfloat;
+        
 
         
     }
