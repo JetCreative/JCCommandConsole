@@ -15,9 +15,10 @@ How to Use:
 ![alt text](https://github.com/JetCreative/JCCommandConsole/blob/main/Images/HowToLabelMethods.png)
 
 5. Demo scene has a Demo Handler component using input actions to open the console or you can open/close however you wish by calling JCCommandConsole.Instance.EnableConsole().
-4. Click in the inputfield in the bottom of the Console UI to input your command. Method names are automaticaly converted to lower case for the calling in the console purposes.
-5. You can submit commands via "Enter" in the demo, by calling SubmitCommand method in the ConsoleUI class, or click on the "Enter" button to submit the command.
-6. The outcome of the command is returned in to the output field. It will show the return value of your commanded method as well as any error.
+4. Click in the inputfield in the bottom of the Console UI to input your command. Command names are automaticaly converted to lower case for the calling in the console purposes.
+5. Preface the first word with @ followed by a gameobject name or tag name (case and space sensative) to apply the command to that instance. Prefacing with @@ will apply to all instances with that name.
+6. You can submit commands via "Enter" in the demo, by calling SubmitCommand method in the ConsoleUI class, or click on the "Enter" button to submit the command.
+7. The outcome of the command is returned in to the output field. It will show the return value of your commanded method as well as any error.
 
 ![alt-text](https://github.com/JetCreative/JCCommandConsole/blob/main/Images/Console.png)
 
