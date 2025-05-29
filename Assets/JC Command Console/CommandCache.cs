@@ -1,0 +1,55 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using JetCreative.Serialization;
+using UnityEditor;
+using UnityEngine;
+
+namespace JetCreative.CommandConsolePro
+{
+    public class CommandCache : ScriptableSingleton<CommandCache>
+    {
+       
+        [Serializable] public class MethodDictionary : SerializedDictionary<string, SerializableMethodInfo> { }
+        [Serializable] public class PropertyDictionary : SerializedDictionary<string, SerializedPropertyInfo> { }
+        [Serializable] public class FieldDictionary : SerializedDictionary<string, SerializedFieldInfo> { }
+        [Serializable] public class DelegateDictionary : SerializedDictionary<string, SerializedFieldInfo> { }
+        [Serializable] public class CommandDeclarationTypes : SerializedDictionary<string, Type> { }
+        [Serializable] public class CommandStatic : SerializedDictionary<string, bool> { }
+        
+        
+        /// <summary>
+        /// Dictionary of method commands, keyed by command name
+        /// </summary>
+        public MethodDictionary MethodCommands = new ();
+        
+        public int MethodCount;
+        
+        /// <summary>
+        /// Dictionary of property commands, keyed by command name
+        /// </summary>
+        public PropertyDictionary PropertyCommands = new (); 
+        
+        /// <summary>
+        /// Dictionary of field commands, keyed by command name
+        /// </summary>
+        public FieldDictionary FieldCommands = new (); 
+        
+        /// <summary>
+        /// Dictionary of delegate commands, keyed by command name
+        /// </summary>
+        public DelegateDictionary DelegateCommands = new (); 
+        
+        /// <summary>
+        /// Dictionary mapping commands to their declaring types, used for static command execution
+        /// </summary>
+        public CommandDeclarationTypes CommandDeclaringTypes = new (); 
+        
+        /// <summary>
+        /// Stores whether each command is static or instance-based
+        /// </summary>
+        public CommandStatic IsCommandStatic = new ();
+
+        
+    }
+}

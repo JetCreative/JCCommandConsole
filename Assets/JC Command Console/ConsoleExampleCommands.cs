@@ -161,7 +161,7 @@ namespace JetCreative.CommandConsolePro
 
         /// <summary>
         /// Example of a delegate that can be called.
-        /// Usage: call onhealthchanged 75
+        /// Usage: @nameOrTag call onhealthchanged 75
         /// </summary>
         [Command("onhealthchanged")]
         public Action<float> OnHealthChanged;

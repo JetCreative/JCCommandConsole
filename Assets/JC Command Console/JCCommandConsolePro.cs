@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using JetCreative.Serialization;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -11,39 +13,72 @@ namespace JetCreative.CommandConsolePro
     /// <summary>
     /// Static class for handling command registration and execution for the Command Console Pro system.
     /// </summary>
-    public static class JCCommandConsolePro
+    public class JCCommandConsolePro: MonoBehaviour
     {
         #region Command Caches
 
         /// <summary>
         /// Dictionary of method commands, keyed by command name
         /// </summary>
-        private static Dictionary<string, MethodInfo> methodCommands = new Dictionary<string, MethodInfo>();
+        private Dictionary<string, SerializableMethodInfo> methodCommands => _cache.MethodCommands;
 
         /// <summary>
         /// Dictionary of property commands, keyed by command name
         /// </summary>
-        private static Dictionary<string, PropertyInfo> propertyCommands = new Dictionary<string, PropertyInfo>();
+        private Dictionary<string, SerializedPropertyInfo> propertyCommands => _cache.PropertyCommands;
 
         /// <summary>
         /// Dictionary of field commands, keyed by command name
         /// </summary>
-        private static Dictionary<string, FieldInfo> fieldCommands = new Dictionary<string, FieldInfo>();
+        private Dictionary<string, SerializedFieldInfo> fieldCommands => _cache.FieldCommands;
 
         /// <summary>
         /// Dictionary of delegate commands, keyed by command name
         /// </summary>
-        private static Dictionary<string, FieldInfo> delegateCommands = new Dictionary<string, FieldInfo>();
+        private Dictionary<string, SerializedFieldInfo> delegateCommands => _cache.DelegateCommands;
 
         /// <summary>
         /// Dictionary mapping commands to their declaring types, used for static command execution
         /// </summary>
-        private static Dictionary<string, Type> commandDeclaringTypes = new Dictionary<string, Type>();
+        private Dictionary<string, Type> commandDeclaringTypes => _cache.CommandDeclaringTypes;
 
         /// <summary>
         /// Stores whether each command is static or instance-based
         /// </summary>
-        private static Dictionary<string, bool> isCommandStatic = new Dictionary<string, bool>();
+        private Dictionary<string, bool> isCommandStatic => _cache.IsCommandStatic;
+        
+        [SerializeField] private CommandCache _cache;
+        
+        
+        #endregion
+        #region Lifecycle
+
+        public static JCCommandConsolePro Instance { get; private set; }
+        public static bool IsInitialized => Instance != null;
+        private void OnValidate()
+        {
+            if (Instance != null && Instance != this) 
+            {
+                this.enabled = false;
+                throw new Exception("Only one instance of JCCommandConsolePro can exist at a time.");
+            }
+            
+            Instance = this;
+            
+        }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this) 
+            {
+                Destroy(gameObject);
+                throw new Exception("Only one instance of JCCommandConsolePro can exist at a time.");
+            }
+            
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            Debug.Log(fieldCommands.Count);
+        }
 
         #endregion
 
@@ -52,18 +87,18 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Array of preface commands used to indicate specific intentions
         /// </summary>
-        public static string[] prefacecmds = { "@", "@@", "#", "##" };
+        public static string[] TargetCmds = { "@", "@@", "#", "##", "select" };
 
         /// <summary>
         /// Array of console commands that set intention for the next word
         /// </summary>
-        public static string[] consolecmds = { "get", "set", "select", "call" };
+        public static string[] consolecmds = { "get", "set", "call" };
 
         #endregion
 
         #region Command Registration
 
-        public static bool HasGeneratedCache;
+        public bool HasGeneratedCache => _cache;
         
         /// <summary>
         /// Generates a cache of all methods, delegates, properties, and field commands marked by the Command attribute.
@@ -73,16 +108,32 @@ namespace JetCreative.CommandConsolePro
         /// <param name="includeNamespaces">Specific namespaces to include (null or empty means all)</param>
         /// <param name="excludeNamespaces">Specific namespaces to exclude</param>
         /// <returns>The total number of commands registered</returns>
-        public static int GenerateCommandCache(bool includePrivate = false, bool includeExampleCommands = true, 
+        public int GenerateCommandCache(bool includePrivate = false, bool includeExampleCommands = true, 
             string[] includeNamespaces = null, string[] excludeNamespaces = null)
         {
+            if (!_cache)
+            {
+                var storedCache = AssetDatabase.FindAssets($"t:{nameof(CommandCache)}");
+
+                if (storedCache.Length > 0)
+                {
+                    _cache = AssetDatabase.LoadAssetAtPath<CommandCache>(AssetDatabase.GUIDToAssetPath(storedCache[0]));
+                }
+                else
+                {
+                    var newCache = ScriptableObject.CreateInstance<CommandCache>();
+                    AssetDatabase.CreateAsset(newCache, "Assets/CommandCache.asset");
+                    _cache = newCache;
+                }
+            }
+            
             // Clear existing caches
-            methodCommands.Clear();
-            propertyCommands.Clear();
-            fieldCommands.Clear();
-            delegateCommands.Clear();
-            commandDeclaringTypes.Clear();
-            isCommandStatic.Clear();
+            _cache.MethodCommands.Clear();
+            _cache.PropertyCommands.Clear();
+            _cache.FieldCommands.Clear();
+            _cache.DelegateCommands.Clear();
+            _cache.CommandDeclaringTypes.Clear();
+            _cache.IsCommandStatic.Clear();
 
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
             if (includePrivate)
@@ -120,7 +171,7 @@ namespace JetCreative.CommandConsolePro
                             if (attribute != null)
                             {
                                 string commandName = attribute.CommandName ?? method.Name.ToLower();
-                                methodCommands[commandName] = method;
+                                methodCommands[commandName] = new SerializableMethodInfo(method);
                                 commandDeclaringTypes[commandName] = type;
                                 isCommandStatic[commandName] = method.IsStatic;
                                 commandCount++;
@@ -134,7 +185,7 @@ namespace JetCreative.CommandConsolePro
                             if (attribute != null)
                             {
                                 string commandName = attribute.CommandName ?? property.Name.ToLower();
-                                propertyCommands[commandName] = property;
+                                propertyCommands[commandName] = new SerializedPropertyInfo(property);
                                 commandDeclaringTypes[commandName] = type;
                                 isCommandStatic[commandName] = property.GetGetMethod()?.IsStatic ?? 
                                                               property.GetSetMethod()?.IsStatic ?? false;
@@ -153,11 +204,11 @@ namespace JetCreative.CommandConsolePro
                                 // Check if it's a delegate
                                 if (typeof(Delegate).IsAssignableFrom(field.FieldType))
                                 {
-                                    delegateCommands[commandName] = field;
+                                    delegateCommands[commandName] = new SerializedFieldInfo(field);
                                 }
                                 else
                                 {
-                                    fieldCommands[commandName] = field;
+                                    fieldCommands[commandName] = new SerializedFieldInfo(field);
                                 }
                                 
                                 commandDeclaringTypes[commandName] = type;
@@ -178,7 +229,7 @@ namespace JetCreative.CommandConsolePro
                                 var field = type.GetField(eventInfo.Name, bindingFlags);
                                 if (field != null)
                                 {
-                                    delegateCommands[commandName] = field;
+                                    delegateCommands[commandName] = new SerializedFieldInfo(field);
                                     commandDeclaringTypes[commandName] = type;
                                     isCommandStatic[commandName] = field.IsStatic;
                                     commandCount++;
@@ -194,7 +245,7 @@ namespace JetCreative.CommandConsolePro
             }
 
             Debug.Log($"Command Console Pro: {commandCount} commands registered successfully.");
-            HasGeneratedCache = true;
+            //HasGeneratedCache = true;
             return commandCount;
         }
 
@@ -207,29 +258,33 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         /// <param name="input">The command input string to parse and execute</param>
         /// <returns>Result of command execution or error message</returns>
-        public static string ExecuteCommand(string input)
+        public string ExecuteCommand(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
                 return "Error: Empty command.";
 
             try
             {
+                //break into words with single spaces between words
                 // Tokenize the input
-                string[] tokens = input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                if (tokens.Length == 0)
+                var tokens = input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                
+                //RemoveConsecutiveEmptyEntries(tokens);
+
+                if (tokens.Count == 0)
                     return "Error: Empty command.";
 
                 int currentTokenIndex = 0;
                 GameObject[] targetObjects = null;
-                bool isSelectCommand = false;
+                //bool isSelectCommand = false;
 
-                // Check if first token is a preface command
-                if (currentTokenIndex < tokens.Length && StartsWithAny(tokens[currentTokenIndex], prefacecmds, out string prefaceCmd))
+                // Check if first token is a target command
+                if (currentTokenIndex < tokens.Count && StartsWithAny(tokens[currentTokenIndex], TargetCmds, out string prefaceCmd))
                 {
                     string objectIdentifier = tokens[currentTokenIndex].Substring(prefaceCmd.Length);
                     currentTokenIndex++;
 
-                    // Handle different preface commands
+                    // Handle different target commands
                     switch (prefaceCmd)
                     {
                         case "@":
@@ -255,28 +310,38 @@ namespace JetCreative.CommandConsolePro
                             if (targetObjects.Length == 0)
                                 return $"Error: No GameObjects with tag '{objectIdentifier}' found.";
                             break;
+                        case "select" :
+                            #if UNITY_EDITOR
+                                var selectedObjects = UnityEditor.Selection.gameObjects;
+                                if (selectedObjects.Length == 0)
+                                   return "Error: No GameObject selected in the Editor.";
+                                targetObjects = selectedObjects;
+                            #else
+                                  return "Error: 'select' command can only be used in the Editor.";
+                            #endif
+                                break;
                         default:
                             return $"Error: Unknown preface command '{prefaceCmd}'.";
                     }
                 }
                 // Check if first token is "select"
-                else if (currentTokenIndex < tokens.Length && tokens[currentTokenIndex].ToLower() == "select")
-                {
-                    currentTokenIndex++;
-                    isSelectCommand = true;
-
-                    #if UNITY_EDITOR
-                    var selectedObjects = UnityEditor.Selection.gameObjects;
-                    if (selectedObjects.Length == 0)
-                        return "Error: No GameObject selected in the Editor.";
-                    targetObjects = selectedObjects;
-                    #else
-                    return "Error: 'select' command can only be used in the Editor.";
-                    #endif
-                }
+                // else if (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].ToLower() == "select")
+                // {
+                //     currentTokenIndex++;
+                //     isSelectCommand = true;
+                //
+                //     #if UNITY_EDITOR
+                //     var selectedObjects = UnityEditor.Selection.gameObjects;
+                //     if (selectedObjects.Length == 0)
+                //         return "Error: No GameObject selected in the Editor.";
+                //     targetObjects = selectedObjects;
+                //     #else
+                //     return "Error: 'select' command can only be used in the Editor.";
+                //     #endif
+                // }
 
                 // We need a console command next
-                if (currentTokenIndex >= tokens.Length)
+                if (currentTokenIndex >= tokens.Count)
                     return "Error: Missing console command (get, set, call).";
 
                 string consoleCmd = tokens[currentTokenIndex].ToLower();
@@ -285,7 +350,7 @@ namespace JetCreative.CommandConsolePro
                 currentTokenIndex++;
 
                 // We need a command name next
-                if (currentTokenIndex >= tokens.Length)
+                if (currentTokenIndex >= tokens.Count)
                     return $"Error: Missing command name after '{consoleCmd}'.";
 
                 string commandName = tokens[currentTokenIndex].ToLower();
@@ -298,9 +363,9 @@ namespace JetCreative.CommandConsolePro
                     // For static commands, we don't need a target object
                     targetObjects = null;
                 }
-                else if (targetObjects == null && !isSelectCommand)
+                else if (targetObjects == null ) //&& !isSelectCommand
                 {
-                    return $"Error: Non-static command '{commandName}' requires a target GameObject. Use @ or # preface, or 'select' in Editor.";
+                    return $"Error: Non-static command '{commandName}' requires a target GameObject. Use @ or # prefaces, or 'select' in Editor.";
                 }
 
                 // Execute the command based on console command type
@@ -310,16 +375,17 @@ namespace JetCreative.CommandConsolePro
                         return ExecuteGetCommand(commandName, targetObjects);
                         
                     case "set":
-                        if (currentTokenIndex >= tokens.Length)
+                        if (currentTokenIndex >= tokens.Count)
                             return $"Error: Missing value for 'set {commandName}'.";
                         
                         string valueString = string.Join(" ", tokens.Skip(currentTokenIndex));
                         return ExecuteSetCommand(commandName, valueString, targetObjects);
                         
                     case "call":
-                        string[] parameters = currentTokenIndex < tokens.Length 
+                        string[] parameters = currentTokenIndex < tokens.Count 
                             ? tokens.Skip(currentTokenIndex).ToArray() 
-                            : new string[0];
+                            : Array.Empty<string>();
+                        
                         return ExecuteCallCommand(commandName, parameters, targetObjects);
                         
                     default:
@@ -335,16 +401,16 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Executes a "get" command to retrieve a property or field value.
         /// </summary>
-        private static string ExecuteGetCommand(string commandName, GameObject[] targetObjects)
+        private string ExecuteGetCommand(string commandName, GameObject[] targetObjects)
         {
             // Check if command exists
-            if (propertyCommands.TryGetValue(commandName, out PropertyInfo propertyInfo))
+            if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
             {
-                return GetPropertyValue(propertyInfo, targetObjects);
+                return GetPropertyValue(propertyInfo.propertyInfo, targetObjects);
             }
-            else if (fieldCommands.TryGetValue(commandName, out FieldInfo fieldInfo))
+            else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
             {
-                return GetFieldValue(fieldInfo, targetObjects);
+                return GetFieldValue(fieldInfo.fieldInfo, targetObjects);
             }
             else
             {
@@ -355,16 +421,16 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Executes a "set" command to set a property or field value.
         /// </summary>
-        private static string ExecuteSetCommand(string commandName, string valueString, GameObject[] targetObjects)
+        private string ExecuteSetCommand(string commandName, string valueString, GameObject[] targetObjects)
         {
             // Check if command exists
-            if (propertyCommands.TryGetValue(commandName, out PropertyInfo propertyInfo))
+            if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
             {
-                return SetPropertyValue(propertyInfo, valueString, targetObjects);
+                return SetPropertyValue(propertyInfo.propertyInfo, valueString, targetObjects);
             }
-            else if (fieldCommands.TryGetValue(commandName, out FieldInfo fieldInfo))
+            else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
             {
-                return SetFieldValue(fieldInfo, valueString, targetObjects);
+                return SetFieldValue(fieldInfo.fieldInfo, valueString, targetObjects);
             }
             else
             {
@@ -375,16 +441,16 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Executes a "call" command to invoke a method or delegate.
         /// </summary>
-        private static string ExecuteCallCommand(string commandName, string[] parameters, GameObject[] targetObjects)
+        private string ExecuteCallCommand(string commandName, string[] parameters, GameObject[] targetObjects)
         {
             // Check if command exists
-            if (methodCommands.TryGetValue(commandName, out MethodInfo methodInfo))
+            if (methodCommands.TryGetValue(commandName, out SerializableMethodInfo methodInfo))
             {
-                return InvokeMethod(methodInfo, parameters, targetObjects);
+                return InvokeMethod(methodInfo.methodInfo, parameters, targetObjects);
             }
-            else if (delegateCommands.TryGetValue(commandName, out FieldInfo delegateField))
+            else if (delegateCommands.TryGetValue(commandName, out SerializedFieldInfo delegateField))
             {
-                return InvokeDelegate(delegateField, parameters, targetObjects);
+                return InvokeDelegate(delegateField.fieldInfo, parameters, targetObjects);
             }
             else
             {
@@ -840,7 +906,7 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Gets all available commands for autocomplete.
         /// </summary>
-        public static IEnumerable<string> GetAllCommands()
+        public IEnumerable<string> GetAllCommands()
         {
             var commands = new List<string>();
             commands.AddRange(methodCommands.Keys);
@@ -853,30 +919,30 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Gets type information for a command to aid in prediction.
         /// </summary>
-        public static string GetCommandTypeInfo(string commandName)
+        public string GetCommandTypeInfo(string commandName)
         {
-            if (methodCommands.TryGetValue(commandName, out MethodInfo methodInfo))
+            if (methodCommands.TryGetValue(commandName, out SerializableMethodInfo methodInfo))
             {
-                var parameters = methodInfo.GetParameters();
+                var parameters = methodInfo.methodInfo.GetParameters();
                 if (parameters.Length == 0)
-                    return "(method) returns " + FormatTypeName(methodInfo.ReturnType);
+                    return "(method) returns " + FormatTypeName(methodInfo.methodInfo.ReturnType);
                 
                 var paramInfo = string.Join(", ", parameters.Select(p => $"{FormatTypeName(p.ParameterType)} {p.Name}"));
-                return $"(method) ({paramInfo}) returns {FormatTypeName(methodInfo.ReturnType)}";
+                return $"(method) ({paramInfo}) returns {FormatTypeName(methodInfo.methodInfo.ReturnType)}";
             }
-            else if (propertyCommands.TryGetValue(commandName, out PropertyInfo propertyInfo))
+            else if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
             {
-                return $"(property) {FormatTypeName(propertyInfo.PropertyType)}";
+                return $"(property) {FormatTypeName(propertyInfo.propertyInfo.PropertyType)}";
             }
-            else if (fieldCommands.TryGetValue(commandName, out FieldInfo fieldInfo))
+            else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
             {
-                return $"(field) {FormatTypeName(fieldInfo.FieldType)}";
+                return $"(field) {FormatTypeName(fieldInfo.fieldInfo.FieldType)}";
             }
-            else if (delegateCommands.TryGetValue(commandName, out FieldInfo delegateField))
+            else if (delegateCommands.TryGetValue(commandName, out SerializedFieldInfo delegateField))
             {
-                if (delegateField.FieldType.IsSubclassOf(typeof(Delegate)))
+                if (delegateField.fieldInfo.FieldType.IsSubclassOf(typeof(Delegate)))
                 {
-                    var invokeMethod = delegateField.FieldType.GetMethod("Invoke");
+                    var invokeMethod = delegateField.fieldInfo.FieldType.GetMethod("Invoke");
                     if (invokeMethod != null)
                     {
                         var parameters = invokeMethod.GetParameters();
@@ -922,25 +988,47 @@ namespace JetCreative.CommandConsolePro
             return Enum.GetNames(enumType);
         }
 
+        /// <summary>
+        /// Removes consecutive empty entries from the word list to include spaces
+        /// </summary>
+        /// <param name="words">List of words to clean up</param>
+        public static void RemoveConsecutiveEmptyEntries(List<string> words)
+        {
+            for (int currentIndex = 0; currentIndex < words.Count; currentIndex++)
+            {
+                if (!string.IsNullOrEmpty(words[currentIndex])) 
+                    continue;
+            
+                while (currentIndex + 1 < words.Count && string.IsNullOrEmpty(words[currentIndex + 1]))
+                {
+                    words.RemoveAt(currentIndex);
+                }
+            }
+        }
         
         /// <summary>
         /// Predicts the next possible words in a command.
         /// </summary>
-        public static string[] PredictNextWords(string currentInput)
+        public string[] PredictNextWords(string currentInput)
         {
-            var tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.None).ToList();
+            RemoveConsecutiveEmptyEntries(tokens);
+
+            Debug.Log("tokens" + tokens + "tokens count" + tokens.Count);
+            
             var predictions = new List<string>();
             
             // No tokens yet, suggest preface commands and "select"
-            if (tokens.Length == 0)
+            if (tokens.Count == 0)
             {
-                predictions.AddRange(prefacecmds);
-                predictions.Add("select");
-                return predictions.ToArray();
+                // predictions.AddRange(TargetCmds);
+                // predictions.Add("select");
+                // return predictions.ToArray();
+                return Array.Empty<string>();
             }
             
             // First token - suggest GameObject names or tags after @ or #
-            if (tokens.Length == 1)
+            if (tokens.Count == 1)
             {
                 string token = tokens[0];
                 
@@ -988,7 +1076,7 @@ namespace JetCreative.CommandConsolePro
                 {
                     var partialCommand = tokens[0];
                     
-                    foreach (var prefaceCmd in prefacecmds)
+                    foreach (var prefaceCmd in TargetCmds)
                     {
                         if (prefaceCmd.StartsWith(partialCommand) || 
                             (partialCommand.StartsWith(prefaceCmd) && partialCommand.Length > prefaceCmd.Length))
@@ -1007,7 +1095,7 @@ namespace JetCreative.CommandConsolePro
             }
             
             // Second token after a preface command or "select" - suggest console commands
-            if (tokens.Length == 2 && (
+            if (tokens.Count == 2 && (
                 tokens[0].StartsWith("@") || tokens[0].StartsWith("#") || tokens[0] == "select"))
             {
                 var partialCmd = tokens[1];
@@ -1024,7 +1112,7 @@ namespace JetCreative.CommandConsolePro
             }
             
             // Third token - suggest command names
-            if (tokens.Length == 3 && consolecmds.Contains(tokens[1].ToLower()))
+            if (tokens.Count == 3 && consolecmds.Contains(tokens[1].ToLower()))
             {
                 var consoleCmd = tokens[1].ToLower();
                 var partialCommandName = tokens[2].ToLower();
@@ -1056,30 +1144,30 @@ namespace JetCreative.CommandConsolePro
             }
             
             // Fourth token for "set" commands - suggest possible values
-            if (tokens.Length == 4 && tokens[1].ToLower() == "set")
+            if (tokens.Count == 4 && tokens[1].ToLower() == "set")
             {
                 var commandName = tokens[2].ToLower();
                 
                 // For property commands
-                if (propertyCommands.TryGetValue(commandName, out PropertyInfo propertyInfo))
+                if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
                 {
-                    if (propertyInfo.PropertyType.IsEnum)
+                    if (propertyInfo.propertyInfo.PropertyType.IsEnum)
                     {
-                        return GetEnumValues(propertyInfo.PropertyType);
+                        return GetEnumValues(propertyInfo.propertyInfo.PropertyType);
                     }
-                    else if (propertyInfo.PropertyType == typeof(bool))
+                    else if (propertyInfo.propertyInfo.PropertyType == typeof(bool))
                     {
                         return new[] { "true", "false" };
                     }
                 }
                 // For field commands
-                else if (fieldCommands.TryGetValue(commandName, out FieldInfo fieldInfo))
+                else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
                 {
-                    if (fieldInfo.FieldType.IsEnum)
+                    if (fieldInfo.fieldInfo.FieldType.IsEnum)
                     {
-                        return GetEnumValues(fieldInfo.FieldType);
+                        return GetEnumValues(fieldInfo.fieldInfo.FieldType);
                     }
-                    else if (fieldInfo.FieldType == typeof(bool))
+                    else if (fieldInfo.fieldInfo.FieldType == typeof(bool))
                     {
                         return new[] { "true", "false" };
                     }
@@ -1087,15 +1175,15 @@ namespace JetCreative.CommandConsolePro
             }
             
             // For method or delegate parameters, check parameter types
-            if (tokens.Length >= 4 && tokens[1].ToLower() == "call")
+            if (tokens.Count >= 4 && tokens[1].ToLower() == "call")
             {
                 var commandName = tokens[2].ToLower();
-                int paramIndex = tokens.Length - 4;
+                int paramIndex = tokens.Count - 4;
                 
                 // For method commands
-                if (methodCommands.TryGetValue(commandName, out MethodInfo methodInfo))
+                if (methodCommands.TryGetValue(commandName, out SerializableMethodInfo methodInfo))
                 {
-                    var parameters = methodInfo.GetParameters();
+                    var parameters = methodInfo.methodInfo.GetParameters();
                     if (paramIndex < parameters.Length && parameters[paramIndex].ParameterType.IsEnum)
                     {
                         return GetEnumValues(parameters[paramIndex].ParameterType);
@@ -1106,10 +1194,10 @@ namespace JetCreative.CommandConsolePro
                     }
                 }
                 // For delegate commands
-                else if (delegateCommands.TryGetValue(commandName, out FieldInfo delegateField) && 
-                         delegateField.FieldType.IsSubclassOf(typeof(Delegate)))
+                else if (delegateCommands.TryGetValue(commandName, out SerializedFieldInfo delegateField) && 
+                         delegateField.fieldInfo.FieldType.IsSubclassOf(typeof(Delegate)))
                 {
-                    var invokeMethod = delegateField.FieldType.GetMethod("Invoke");
+                    var invokeMethod = delegateField.fieldInfo.FieldType.GetMethod("Invoke");
                     if (invokeMethod != null)
                     {
                         var parameters = invokeMethod.GetParameters();
