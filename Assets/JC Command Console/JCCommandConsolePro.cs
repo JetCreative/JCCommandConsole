@@ -25,7 +25,12 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Dictionary of property commands, keyed by command name
         /// </summary>
-        private Dictionary<string, SerializedPropertyInfo> propertyCommands => _cache.PropertyCommands;
+        private Dictionary<string, SerializedPropertyInfo> propertyGetCommands => _cache.PropertyGetCommands;
+        
+        /// <summary>
+        /// Dictionary of property commands, keyed by command name
+        /// </summary>
+        private Dictionary<string, SerializedPropertyInfo> propertySetCommands => _cache.PropertySetCommands;
 
         /// <summary>
         /// Dictionary of field commands, keyed by command name
@@ -129,7 +134,8 @@ namespace JetCreative.CommandConsolePro
             
             // Clear existing caches
             _cache.MethodCommands.Clear();
-            _cache.PropertyCommands.Clear();
+            _cache.PropertyGetCommands.Clear();
+            _cache.PropertySetCommands.Clear();
             _cache.FieldCommands.Clear();
             _cache.DelegateCommands.Clear();
             _cache.CommandDeclaringTypes.Clear();
@@ -185,7 +191,13 @@ namespace JetCreative.CommandConsolePro
                             if (attribute != null)
                             {
                                 string commandName = attribute.CommandName ?? property.Name.ToLower();
-                                propertyCommands[commandName] = new SerializedPropertyInfo(property);
+
+                                propertyGetCommands[commandName] = new SerializedPropertyInfo(property);
+                                
+                                //check if the setter is public or includePrivate is true
+                                if (property.SetMethod != null &&  (!property.SetMethod.IsPrivate || includePrivate))
+                                    propertySetCommands[commandName] = new SerializedPropertyInfo(property);
+                                
                                 commandDeclaringTypes[commandName] = type;
                                 isCommandStatic[commandName] = property.GetGetMethod()?.IsStatic ?? 
                                                               property.GetSetMethod()?.IsStatic ?? false;
@@ -265,18 +277,14 @@ namespace JetCreative.CommandConsolePro
 
             try
             {
-                //break into words with single spaces between words
                 // Tokenize the input
                 var tokens = input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-                
-                //RemoveConsecutiveEmptyEntries(tokens);
 
                 if (tokens.Count == 0)
                     return "Error: Empty command.";
 
                 int currentTokenIndex = 0;
                 GameObject[] targetObjects = null;
-                //bool isSelectCommand = false;
 
                 // Check if first token is a target command
                 if (currentTokenIndex < tokens.Count && StartsWithAny(tokens[currentTokenIndex], TargetCmds, out string prefaceCmd))
@@ -324,21 +332,6 @@ namespace JetCreative.CommandConsolePro
                             return $"Error: Unknown preface command '{prefaceCmd}'.";
                     }
                 }
-                // Check if first token is "select"
-                // else if (currentTokenIndex < tokens.Count && tokens[currentTokenIndex].ToLower() == "select")
-                // {
-                //     currentTokenIndex++;
-                //     isSelectCommand = true;
-                //
-                //     #if UNITY_EDITOR
-                //     var selectedObjects = UnityEditor.Selection.gameObjects;
-                //     if (selectedObjects.Length == 0)
-                //         return "Error: No GameObject selected in the Editor.";
-                //     targetObjects = selectedObjects;
-                //     #else
-                //     return "Error: 'select' command can only be used in the Editor.";
-                //     #endif
-                // }
 
                 // We need a console command next
                 if (currentTokenIndex >= tokens.Count)
@@ -357,8 +350,7 @@ namespace JetCreative.CommandConsolePro
                 currentTokenIndex++;
 
                 // Handle static vs. instance command
-                bool isStatic = false;
-                if (isCommandStatic.TryGetValue(commandName, out isStatic) && isStatic)
+                if (isCommandStatic.TryGetValue(commandName, out bool isStatic) && isStatic)
                 {
                     // For static commands, we don't need a target object
                     targetObjects = null;
@@ -404,7 +396,7 @@ namespace JetCreative.CommandConsolePro
         private string ExecuteGetCommand(string commandName, GameObject[] targetObjects)
         {
             // Check if command exists
-            if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
+            if (propertyGetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
             {
                 return GetPropertyValue(propertyInfo.propertyInfo, targetObjects);
             }
@@ -424,7 +416,7 @@ namespace JetCreative.CommandConsolePro
         private string ExecuteSetCommand(string commandName, string valueString, GameObject[] targetObjects)
         {
             // Check if command exists
-            if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
+            if (propertySetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
             {
                 return SetPropertyValue(propertyInfo.propertyInfo, valueString, targetObjects);
             }
@@ -910,7 +902,8 @@ namespace JetCreative.CommandConsolePro
         {
             var commands = new List<string>();
             commands.AddRange(methodCommands.Keys);
-            commands.AddRange(propertyCommands.Keys);
+            commands.AddRange(propertyGetCommands.Keys);
+            commands.AddRange(propertySetCommands.Keys);
             commands.AddRange(fieldCommands.Keys);
             commands.AddRange(delegateCommands.Keys);
             return commands.Distinct();
@@ -930,9 +923,13 @@ namespace JetCreative.CommandConsolePro
                 var paramInfo = string.Join(", ", parameters.Select(p => $"{FormatTypeName(p.ParameterType)} {p.Name}"));
                 return $"(method) ({paramInfo}) returns {FormatTypeName(methodInfo.methodInfo.ReturnType)}";
             }
-            else if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
+            else if (propertyGetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyGetInfo))
             {
-                return $"(property) {FormatTypeName(propertyInfo.propertyInfo.PropertyType)}";
+                return $"(property) {FormatTypeName(propertyGetInfo.propertyInfo.PropertyType)}";
+            }
+            else if (propertySetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertySetInfo))
+            {
+                return $"(property) {FormatTypeName(propertySetInfo.propertyInfo.PropertyType)}";
             }
             else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
             {
@@ -1120,7 +1117,9 @@ namespace JetCreative.CommandConsolePro
                 // For "get" and "set", suggest property and field commands
                 if (consoleCmd == "get" || consoleCmd == "set")
                 {
-                    foreach (var cmd in propertyCommands.Keys.Concat(fieldCommands.Keys))
+                    var propertyCommands = consoleCmd == "get" ? propertyGetCommands.Keys : propertySetCommands.Keys;
+                    
+                    foreach (var cmd in propertyCommands.Concat(fieldCommands.Keys))
                     {
                         if (string.IsNullOrEmpty(partialCommandName) || cmd.StartsWith(partialCommandName, StringComparison.OrdinalIgnoreCase))
                         {
@@ -1149,7 +1148,7 @@ namespace JetCreative.CommandConsolePro
                 var commandName = tokens[2].ToLower();
                 
                 // For property commands
-                if (propertyCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
+                if (propertySetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
                 {
                     if (propertyInfo.propertyInfo.PropertyType.IsEnum)
                     {

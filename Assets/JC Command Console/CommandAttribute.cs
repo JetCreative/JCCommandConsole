@@ -38,7 +38,8 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Attribute to mark methods, properties, fields, and delegates as console commands that can be executed by JCCommandConsolePro.
         /// </summary>
-        /// <param name="commandName">Optional custom name for the command. If null, the element's name will be used.</param>
+        /// <param name="commandName">Optional custom name for the command. If null, the element's name will be used.
+        /// The stored command name will always be lower case.</param>
         /// <remarks>
         /// Elements decorated with this attribute can be identified and invoked as commands in the console system.
         /// The <c>CommandName</c> property allows assigning an optional name for the command,
@@ -46,7 +47,7 @@ namespace JetCreative.CommandConsolePro
         /// </remarks>
         public CommandAttribute(string commandName = null)
         {
-            CommandName = commandName;
+            CommandName = commandName?.ToLower();
         }
     }
 }

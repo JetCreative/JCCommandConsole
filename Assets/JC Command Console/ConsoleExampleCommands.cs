@@ -43,6 +43,13 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         [Command]
         public int Score { get; set; } = 0;
+        
+        /// <summary>
+        /// Example of a property with a public getter and a private setter.
+        /// Editor Settings control private setter availability.
+        /// </summary>
+        [Command("Inventory")]
+        public int InventorySize { get; private set; } = 0;
 
         /// <summary>
         /// Example of a read-only property (can only be "get").
