@@ -468,33 +468,49 @@ namespace JetCreative.CommandConsolePro
             // Parse the current input to identify tokens
             List<string> tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             
+            string targetCmd = string.Empty;
+            var consoleCmd = string.Empty; 
+            var commandName = string.Empty;
+
+            //if first token is not a target command then add empty token at index 0 to make indexing consistent
+            if (JCCommandConsolePro.StartsWithAny(tokens[0], JCCommandConsolePro.TargetCmds, out string prefaceCmd))
+                targetCmd = prefaceCmd;
+            else
+                tokens.Insert(0, "");
+            
+            if ( tokens.Count > 1 && JCCommandConsolePro.consolecmds.Contains(tokens[1].ToLower()))
+                consoleCmd = tokens[1].ToLower();
+            
+            if (tokens.Count > 2 && JCCommandConsolePro.Instance.GetCommandTypeInfo(tokens[2].ToLower()) != null)
+                commandName = tokens[2].ToLower();
+            
             // Check if the last token is valid
-            //string lastToken = tokens[^1] != "" ? tokens[^1] : tokens[^2];
             bool lastTokenValid = IsValidToken(tokens[^1]);
             string currentToken = tokens[^1];
             
             // Get predictions for the next word
-            string[] predictions = JCCommandConsolePro.Instance.PredictNextWords(currentInput);
+            string[] predictions = JCCommandConsolePro.Instance.PredictCurrentWord(currentInput);
             
-            if (!lastTokenValid && predictions.Length == 0)
-            {
-                predictiveText.text = commandInputField.text + $"<color=#{ColorUtility.ToHtmlStringRGB(errorColor)}>     Invalid command...</color>";
-                return;
-            }
-
+            // if (!lastTokenValid && predictions.Length == 0)
+            // {
+            //     predictiveText.text = commandInputField.text + $"<color=#{ColorUtility.ToHtmlStringRGB(errorColor)}>     Invalid command...</color>";
+            //     return;
+            // }
+            
+            //Format predictions
             if (predictions.Length > 0)
             {
                 string predictionColorHex = ColorUtility.ToHtmlStringRGB(predictiveColor);
                 
                 // For the third token (command name), show type information
-                if (tokens.Count == 3 && JCCommandConsolePro.consolecmds.Contains(tokens[1].ToLower()))
+                if (tokens.Count == 3 && !string.IsNullOrEmpty(consoleCmd))
                 {
-                    string commandName = predictions[0].ToLower();
-                    string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName);
+                    string predCommand = predictions[0].ToLower();
+                    string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(predCommand);
                     
                     if (!string.IsNullOrEmpty(typeInfo))
                     {
-                        predictiveText.text = commandInputField.text + $"{commandName[currentToken.Length..]} <color=#{predictionColorHex}>{typeInfo}</color>";
+                        predictiveText.text = commandInputField.text + $"{predCommand[currentToken.Length..]} <color=#{predictionColorHex}>{typeInfo}</color>";
                         return;
                     }
                 }
@@ -528,18 +544,51 @@ namespace JetCreative.CommandConsolePro
             }
             else
             {
-                // Check if we're handling a method call with parameters
-                if (tokens.Count >= 4 && tokens[1].ToLower() == "call")
+                // Check if we're handling a method/delegate call with parameters
+                if (tokens.Count >= 4 && consoleCmd == "call")
                 {
-                    string commandName = tokens[2].ToLower();
+                    //string commandName = tokens[2].ToLower();
+                    
+                    if (JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName) != null)
+                    {
+                        string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName);
+                        //determine if there are too many parameters
+                        var numParameters = typeInfo.Split(',').Length;
+                        
+                        if (tokens.Count - 2 > numParameters)
+                            predictiveText.text = commandInputField.text + $"<color=#{ColorUtility.ToHtmlStringRGB(errorColor)}>     Too many parameters...</color>";
+                        
+                        string predictionColorHex = ColorUtility.ToHtmlStringRGB(predictiveColor);
+                        predictiveText.text = commandInputField.text + $"{commandName[currentToken.Length..]}<color=#{predictionColorHex}>{typeInfo}</color>";
+                        return;
+                    }
+                }
+                
+                // Check if we're handling a property set with parameters
+                if (tokens.Count >= 4 && tokens[1].ToLower() == "set")
+                {
+                    //check is too many parameters
+                    if (tokens.Count > 4)
+                    {
+                        predictiveText.text = commandInputField.text + $"<color=#{ColorUtility.ToHtmlStringRGB(errorColor)}>     Too many parameters...</color>";
+                        return;
+                    }
+                    
+                    //string commandName = tokens[2].ToLower();
                     
                     if (JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName) != null)
                     {
                         string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName);
                         string predictionColorHex = ColorUtility.ToHtmlStringRGB(predictiveColor);
-                        predictiveText.text = commandInputField.text + $"{commandName[currentToken.Length..]}<color=#{predictionColorHex}>{typeInfo}</color>";
+                        predictiveText.text = commandInputField.text + $"<color=#{predictionColorHex}>{typeInfo}</color>";
                         return;
                     }
+                }
+                
+                if (!lastTokenValid && predictions.Length == 0)
+                {
+                    predictiveText.text = commandInputField.text + $"<color=#{ColorUtility.ToHtmlStringRGB(errorColor)}>     Invalid command...</color>";
+                    return;
                 }
                 
                 // No predictions available
@@ -597,7 +646,7 @@ namespace JetCreative.CommandConsolePro
             if (commandInputField == null || !IsConsoleOpen())
                 return;
 
-            string[] predictions = JCCommandConsolePro.Instance.PredictNextWords(commandInputField.text);
+            string[] predictions = JCCommandConsolePro.Instance.PredictCurrentWord(commandInputField.text);
             if (predictions.Length > 0)
             {
                 string[] tokens = commandInputField.text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);

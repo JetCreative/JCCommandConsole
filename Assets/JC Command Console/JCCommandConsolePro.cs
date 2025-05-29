@@ -779,7 +779,7 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Checks if a string starts with any of the provided prefixes and returns the matched prefix.
         /// </summary>
-        private static bool StartsWithAny(string input, string[] prefixes, out string matchedPrefix)
+        public static bool StartsWithAny(string input, string[] prefixes, out string matchedPrefix)
         {
             foreach (var prefix in prefixes)
             {
@@ -1034,7 +1034,7 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Predicts the next possible words in a command.
         /// </summary>
-        public string[] PredictNextWords(string currentInput)
+        public string[] PredictCurrentWord(string currentInput)
         {
             var tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             //RemoveConsecutiveEmptyEntries(tokens);
@@ -1052,6 +1052,22 @@ namespace JetCreative.CommandConsolePro
                 return Array.Empty<string>();
             }
             
+            string targetCmd = string.Empty;
+            string consoleCmd = string.Empty;
+            string commandName = string.Empty;
+            
+            //if first token is not a target command then add empty token at index 0 to make indexing consistent
+            if (StartsWithAny(tokens[0], TargetCmds, out string preface))
+                targetCmd = preface;
+            else
+                tokens.Insert(0, "");
+            
+            if ( tokens.Count > 1 && consolecmds.Contains(tokens[1].ToLower()))
+                consoleCmd = tokens[1].ToLower();
+            
+            if (tokens.Count > 2 && Instance.GetCommandTypeInfo(tokens[2].ToLower()) != null)
+                commandName = tokens[2].ToLower();
+            
             // First token - suggest GameObject names or tags after @ or #
             if (tokens.Count == 1)
             {
@@ -1068,7 +1084,7 @@ namespace JetCreative.CommandConsolePro
                         var partialName = token.Substring(prefix.Length);
                         
                         // Get all GameObject names in scene
-                        foreach (var go in Object.FindObjectsOfType<GameObject>())
+                        foreach (var go in FindObjectsOfType<GameObject>())
                         {
                             if (string.IsNullOrEmpty(partialName) || go.name.StartsWith(partialName, StringComparison.OrdinalIgnoreCase))
                             {
@@ -1121,15 +1137,15 @@ namespace JetCreative.CommandConsolePro
             
             // Second token after a preface command or "select" - suggest console commands
             if (tokens.Count == 2 && (
-                tokens[0].StartsWith("@") || tokens[0].StartsWith("#") || tokens[0] == "select"))
+                targetCmd.StartsWith("@") || targetCmd.StartsWith("#") || targetCmd == "select" || string.IsNullOrEmpty(targetCmd)))
             {
                 var partialCmd = tokens[1];
                 
-                foreach (var consoleCmd in consolecmds)
+                foreach (var consoleCommand in consolecmds)
                 {
-                    if (string.IsNullOrEmpty(partialCmd) || consoleCmd.StartsWith(partialCmd, StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(partialCmd) || consoleCommand.StartsWith(partialCmd, StringComparison.OrdinalIgnoreCase))
                     {
-                        predictions.Add(consoleCmd);
+                        predictions.Add(consoleCommand);
                     }
                 }
                 
@@ -1137,9 +1153,9 @@ namespace JetCreative.CommandConsolePro
             }
             
             // Third token - suggest command names
-            if (tokens.Count == 3 && consolecmds.Contains(tokens[1].ToLower()))
+            if (tokens.Count == 3 && !string.IsNullOrEmpty(consoleCmd))
             {
-                var consoleCmd = tokens[1].ToLower();
+                //var consoleCmd = tokens[1].ToLower();
                 var partialCommandName = tokens[2].ToLower();
                 
                 // For "get" and "set", suggest property and field commands
@@ -1151,7 +1167,11 @@ namespace JetCreative.CommandConsolePro
                     {
                         if (string.IsNullOrEmpty(partialCommandName) || cmd.StartsWith(partialCommandName, StringComparison.OrdinalIgnoreCase))
                         {
-                            predictions.Add(cmd);
+                            // if no target command the only return static commands
+                            if (string.IsNullOrEmpty(targetCmd) && isCommandStatic[cmd])
+                                predictions.Add(cmd);
+                            else if (!string.IsNullOrEmpty(targetCmd) && !isCommandStatic[cmd])
+                                predictions.Add(cmd);
                         }
                     }
                 }
@@ -1162,7 +1182,11 @@ namespace JetCreative.CommandConsolePro
                     {
                         if (string.IsNullOrEmpty(partialCommandName) || cmd.StartsWith(partialCommandName, StringComparison.OrdinalIgnoreCase))
                         {
-                            predictions.Add(cmd);
+                            // if no target command the only return static commands
+                            if (string.IsNullOrEmpty(targetCmd) && isCommandStatic[cmd])
+                                predictions.Add(cmd);
+                            else if (!string.IsNullOrEmpty(targetCmd) && !isCommandStatic[cmd])
+                                predictions.Add(cmd);
                         }
                     }
                 }
@@ -1171,9 +1195,9 @@ namespace JetCreative.CommandConsolePro
             }
             
             // Fourth token for "set" commands - suggest possible values
-            if (tokens.Count == 4 && tokens[1].ToLower() == "set")
+            if (tokens.Count == 4 && consoleCmd == "set")
             {
-                var commandName = tokens[2].ToLower();
+                //var commandName = tokens[2].ToLower();
                 
                 // For property commands
                 if (propertySetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
@@ -1202,9 +1226,9 @@ namespace JetCreative.CommandConsolePro
             }
             
             // For method or delegate parameters, check parameter types
-            if (tokens.Count >= 4 && tokens[1].ToLower() == "call")
+            if (tokens.Count >= 4 && consoleCmd == "call")
             {
-                var commandName = tokens[2].ToLower();
+                //var commandName = tokens[2].ToLower();
                 int paramIndex = tokens.Count - 4;
                 
                 // For method commands
