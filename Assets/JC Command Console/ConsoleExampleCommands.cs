@@ -23,7 +23,7 @@ namespace JetCreative.CommandConsolePro
         /// Example of a private field with a custom command name.
         /// Usage: get ammo or set ammo 50
         /// </summary>
-        [Command("ammo")]
+        [Command("ammo", true)]
         private int _ammunition = 30;
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace JetCreative.CommandConsolePro
         /// Example of a property with a public getter and a private setter.
         /// Editor Settings control private setter availability.
         /// </summary>
-        [Command("Inventory")]
+        [Command("Inventory", true)]
         public int InventorySize { get; private set; } = 0;
 
         /// <summary>
@@ -132,8 +132,8 @@ namespace JetCreative.CommandConsolePro
         /// Example of a method returning a value.
         /// Usage: call getdistance
         /// </summary>
-        [Command]
-        public float GetDistanceFromOrigin()
+        [Command(includePrivate: true)]
+        private float GetDistanceFromOrigin()
         {
             float distance = Vector3.Distance(transform.position, Vector3.zero);
             Debug.Log($"Distance from origin: {distance}");
@@ -177,8 +177,8 @@ namespace JetCreative.CommandConsolePro
         /// Example of a static delegate accessible from anywhere.
         /// Usage: call ongamepaused true
         /// </summary>
-        [Command]
-        public static Action<bool> OnGamePaused;
+        [Command(includePrivate: true)]
+        private static Action<bool> OnGamePaused;
 
         #endregion
 

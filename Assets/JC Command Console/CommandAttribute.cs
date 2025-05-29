@@ -34,6 +34,11 @@ namespace JetCreative.CommandConsolePro
         /// If no value is explicitly provided, the name of the element is used as the default command name.
         /// </summary>
         public string CommandName { get; private set; }
+        
+        /// <summary>
+        /// Override the "includePrivate" setting in the Command Cache to force private members to be included in the command cache.
+        /// </summary>
+        public bool IncludePrivate { get; private set; }
 
         /// <summary>
         /// Attribute to mark methods, properties, fields, and delegates as console commands that can be executed by JCCommandConsolePro.
@@ -45,9 +50,10 @@ namespace JetCreative.CommandConsolePro
         /// The <c>CommandName</c> property allows assigning an optional name for the command,
         /// which can be different from the element's name.
         /// </remarks>
-        public CommandAttribute(string commandName = null)
+        public CommandAttribute(string commandName = null, bool includePrivate = false)
         {
             CommandName = commandName?.ToLower();
+            IncludePrivate = includePrivate;
         }
     }
 }

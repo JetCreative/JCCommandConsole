@@ -130,9 +130,9 @@ namespace JetCreative.CommandConsolePro
             _cache.CommandDeclaringTypes.Clear();
             _cache.IsCommandStatic.Clear();
 
-            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance;
-            if (includePrivate)
-                bindingFlags |= BindingFlags.NonPublic;
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+            // if (includePrivate)
+            //     bindingFlags |= BindingFlags.NonPublic;
 
             int commandCount = 0;
 
@@ -165,6 +165,10 @@ namespace JetCreative.CommandConsolePro
                             var attribute = method.GetCustomAttribute<CommandAttribute>();
                             if (attribute != null)
                             {
+                                //check if should include private methods
+                                if (method.IsPrivate && (!includePrivate && !attribute.IncludePrivate))
+                                    continue;
+                                
                                 string commandName = attribute.CommandName ?? method.Name.ToLower();
                                 methodCommands[commandName] = new SerializableMethodInfo(method);
                                 commandDeclaringTypes[commandName] = type;
@@ -180,12 +184,23 @@ namespace JetCreative.CommandConsolePro
                             if (attribute != null)
                             {
                                 string commandName = attribute.CommandName ?? property.Name.ToLower();
+                                bool isCached = false;
+                                
 
-                                propertyGetCommands[commandName] = new SerializedPropertyInfo(property);
+                                if (property.GetMethod != null &&  (!property.GetMethod.IsPrivate || includePrivate || attribute.IncludePrivate))
+                                {
+                                    propertyGetCommands[commandName] = new SerializedPropertyInfo(property);
+                                    isCached = true;
+                                }
                                 
                                 //check if the setter is public or includePrivate is true
-                                if (property.SetMethod != null &&  (!property.SetMethod.IsPrivate || includePrivate))
+                                if (property.SetMethod != null && (!property.SetMethod.IsPrivate || includePrivate || attribute.IncludePrivate))
+                                {
                                     propertySetCommands[commandName] = new SerializedPropertyInfo(property);
+                                    isCached = true;
+                                }
+
+                                if (!isCached) continue;
                                 
                                 commandDeclaringTypes[commandName] = type;
                                 isCommandStatic[commandName] = property.GetGetMethod()?.IsStatic ?? 
@@ -200,6 +215,10 @@ namespace JetCreative.CommandConsolePro
                             var attribute = field.GetCustomAttribute<CommandAttribute>();
                             if (attribute != null)
                             {
+                                //check if should include private fields
+                                if (field.IsPrivate && (!includePrivate && !attribute.IncludePrivate))
+                                    continue;
+                                
                                 string commandName = attribute.CommandName ?? field.Name.ToLower();
                                 
                                 // Check if it's a delegate
@@ -224,6 +243,10 @@ namespace JetCreative.CommandConsolePro
                             var attribute = eventInfo.GetCustomAttribute<CommandAttribute>();
                             if (attribute != null)
                             {
+                                //check if should include private events
+                                if (eventInfo.GetAddMethod().IsPrivate && (!includePrivate && !attribute.IncludePrivate))
+                                    continue;
+                                
                                 string commandName = attribute.CommandName ?? eventInfo.Name.ToLower();
                                 
                                 // Get the backing field if possible
