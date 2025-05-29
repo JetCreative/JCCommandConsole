@@ -4,12 +4,27 @@ using System.Reflection;
 using JetCreative.Serialization;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace JetCreative.CommandConsolePro
 {
     public class CommandCache : ScriptableSingleton<CommandCache>
     {
-       
+
+        #region Settings
+
+        public bool IncludePrivateMembers = false;
+        public bool IncludeExampleCommands = true;
+        public List<string> IncludeNamespaces = new List<string> { "JetCreative" };
+        public List<string> ExcludeNamespaces = new List<string> { "UnityEngine.Internal", "System.Runtime" };
+        //public string NewNamespace = "";
+        public bool ShowIncludeNamespaces = true;
+        public bool ShowExcludeNamespaces = true;
+
+        #endregion
+
+        #region Command Cache
+
         [Serializable] public class MethodDictionary : SerializedDictionary<string, SerializableMethodInfo> { }
         [Serializable] public class PropertyDictionary : SerializedDictionary<string, SerializedPropertyInfo> { }
         [Serializable] public class FieldDictionary : SerializedDictionary<string, SerializedFieldInfo> { }
@@ -54,7 +69,9 @@ namespace JetCreative.CommandConsolePro
         /// Stores whether each command is static or instance-based
         /// </summary>
         public CommandStatic IsCommandStatic = new ();
+        
 
+        #endregion
         
     }
 }

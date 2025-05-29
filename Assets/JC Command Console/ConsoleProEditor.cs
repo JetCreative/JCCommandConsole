@@ -13,14 +13,28 @@ namespace JetCreative.CommandConsolePro
     {
         #region Editor Window Settings
 
-        private bool includePrivateMembers = false;
-        private bool includeExampleCommands = true;
-        private List<string> includeNamespaces = new List<string> { "JetCreative" };
-        private List<string> excludeNamespaces = new List<string> { "UnityEngine.Internal", "System.Runtime" };
+        private bool includePrivateMembers => cache.IncludePrivateMembers;
+        private bool includeExampleCommands => cache.IncludeExampleCommands;
+        private List<string> includeNamespaces => cache.IncludeNamespaces;
+        private List<string> excludeNamespaces => cache.ExcludeNamespaces;
+        
         private string newNamespace = "";
-        private bool showIncludeNamespaces = true;
-        private bool showExcludeNamespaces = true;
+        private bool showIncludeNamespaces => cache.ShowIncludeNamespaces;
+        private bool showExcludeNamespaces => cache.ShowExcludeNamespaces;
 
+        private static CommandCache _cache;
+
+        private CommandCache cache
+        {
+            get
+            {
+                if (_cache == null)
+                {
+                    _cache = JCCommandConsolePro.GetCommandCache();
+                }
+                return _cache;
+            }
+        }
         #endregion
 
         #region Menu Items
@@ -33,6 +47,8 @@ namespace JetCreative.CommandConsolePro
         {
             var window = GetWindow<ConsoleProEditor>("Command Console Pro");
             window.minSize = new Vector2(400, 300);
+            
+            _cache = JCCommandConsolePro.GetCommandCache();
         }
 
         #endregion
@@ -101,8 +117,8 @@ namespace JetCreative.CommandConsolePro
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Label("Command Filtering", EditorStyles.boldLabel);
             
-            includePrivateMembers = EditorGUILayout.Toggle("Include Private Members", includePrivateMembers);
-            includeExampleCommands = EditorGUILayout.Toggle("Include Example Commands", includeExampleCommands);
+            cache.IncludePrivateMembers = EditorGUILayout.Toggle("Include Private Members", includePrivateMembers);
+            cache.IncludeExampleCommands = EditorGUILayout.Toggle("Include Example Commands", includeExampleCommands);
             
             EditorGUILayout.HelpBox(
                 "Private members are only included if you specifically enable them here. " +
@@ -122,7 +138,7 @@ namespace JetCreative.CommandConsolePro
             GUILayout.Label("Namespace Filtering", EditorStyles.boldLabel);
             
             // Include Namespaces
-            showIncludeNamespaces = EditorGUILayout.Foldout(showIncludeNamespaces, "Include Namespaces");
+            cache.ShowIncludeNamespaces = EditorGUILayout.Foldout(showIncludeNamespaces, "Include Namespaces");
             if (showIncludeNamespaces)
             {
                 EditorGUILayout.HelpBox(
@@ -162,7 +178,7 @@ namespace JetCreative.CommandConsolePro
             EditorGUILayout.Space();
             
             // Exclude Namespaces
-            showExcludeNamespaces = EditorGUILayout.Foldout(showExcludeNamespaces, "Exclude Namespaces");
+            cache.ShowExcludeNamespaces = EditorGUILayout.Foldout(showExcludeNamespaces, "Exclude Namespaces");
             if (showExcludeNamespaces)
             {
                 EditorGUILayout.HelpBox(

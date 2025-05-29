@@ -118,18 +118,7 @@ namespace JetCreative.CommandConsolePro
         {
             if (!_cache)
             {
-                var storedCache = AssetDatabase.FindAssets($"t:{nameof(CommandCache)}");
-
-                if (storedCache.Length > 0)
-                {
-                    _cache = AssetDatabase.LoadAssetAtPath<CommandCache>(AssetDatabase.GUIDToAssetPath(storedCache[0]));
-                }
-                else
-                {
-                    var newCache = ScriptableObject.CreateInstance<CommandCache>();
-                    AssetDatabase.CreateAsset(newCache, "Assets/CommandCache.asset");
-                    _cache = newCache;
-                }
+                _cache = GetCommandCache();
             }
             
             // Clear existing caches
@@ -259,6 +248,22 @@ namespace JetCreative.CommandConsolePro
             Debug.Log($"Command Console Pro: {commandCount} commands registered successfully.");
             //HasGeneratedCache = true;
             return commandCount;
+        }
+
+        public static CommandCache GetCommandCache()
+        {
+            var storedCache = AssetDatabase.FindAssets($"t:{nameof(CommandCache)}");
+
+            if (storedCache.Length > 0)
+            {
+                return AssetDatabase.LoadAssetAtPath<CommandCache>(AssetDatabase.GUIDToAssetPath(storedCache[0]));
+            }
+            else
+            {
+                var newCache = ScriptableObject.CreateInstance<CommandCache>();
+                AssetDatabase.CreateAsset(newCache, "Assets/CommandCache.asset");
+                return newCache;
+            }
         }
 
         #endregion
