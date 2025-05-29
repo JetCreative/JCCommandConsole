@@ -1008,8 +1008,8 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         public string[] PredictNextWords(string currentInput)
         {
-            var tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.None).ToList();
-            RemoveConsecutiveEmptyEntries(tokens);
+            var tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            //RemoveConsecutiveEmptyEntries(tokens);
 
 //            Debug.Log("tokens" + tokens + "tokens count" + tokens.Count);
             
@@ -1082,10 +1082,10 @@ namespace JetCreative.CommandConsolePro
                         }
                     }
                     
-                    if ("select".StartsWith(partialCommand))
-                    {
-                        predictions.Add("select");
-                    }
+                    // if ("select".StartsWith(partialCommand))
+                    // {
+                    //     predictions.Add("select");
+                    // }
                 }
                 
                 return predictions.ToArray();

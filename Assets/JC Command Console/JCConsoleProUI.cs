@@ -458,8 +458,6 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         private void UpdatePredictiveText(string currentInput)
         {
-            // if (predictiveText == null)
-            //     return;
 
             if (string.IsNullOrEmpty(currentInput))
             {
@@ -470,18 +468,17 @@ namespace JetCreative.CommandConsolePro
             // Parse the current input to identify tokens
             List<string> tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             
-            //JCCommandConsolePro.RemoveConsecutiveEmptyEntries(tokens);
-            
             // Check if the last token is valid
             //string lastToken = tokens[^1] != "" ? tokens[^1] : tokens[^2];
             bool lastTokenValid = IsValidToken(tokens[^1]);
+            string currentToken = tokens[^1];
             
             // Get predictions for the next word
             string[] predictions = JCCommandConsolePro.Instance.PredictNextWords(currentInput);
             
             if (!lastTokenValid && predictions.Length == 0)
             {
-                predictiveText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(errorColor)}>     Invalid command...</color>";
+                predictiveText.text = commandInputField.text + $"<color=#{ColorUtility.ToHtmlStringRGB(errorColor)}>     Invalid command...</color>";
                 return;
             }
 
@@ -497,7 +494,7 @@ namespace JetCreative.CommandConsolePro
                     
                     if (!string.IsNullOrEmpty(typeInfo))
                     {
-                        predictiveText.text = $"<color=#{predictionColorHex}>{typeInfo}</color>";
+                        predictiveText.text = commandInputField.text + $"{commandName[currentToken.Length..]} <color=#{predictionColorHex}>{typeInfo}</color>";
                         return;
                     }
                 }
@@ -506,9 +503,9 @@ namespace JetCreative.CommandConsolePro
                 string prediction = predictions[0];
                 
                 // If the prediction completes the current input, show it
-                if (tokens.Count > 0 && prediction.StartsWith(tokens[tokens.Count - 1], StringComparison.OrdinalIgnoreCase))
+                if (tokens.Count > 0 && prediction.StartsWith(currentToken, StringComparison.OrdinalIgnoreCase))
                 {
-                    string completion = prediction.Substring(tokens[tokens.Count - 1].Length);
+                    string completion = prediction[currentToken.Length..];
                     predictiveText.text = $"{currentInput}<color=#{predictionColorHex}>{completion}</color>";
                     
                     // // Show additional predictions if available
@@ -540,7 +537,7 @@ namespace JetCreative.CommandConsolePro
                     {
                         string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName);
                         string predictionColorHex = ColorUtility.ToHtmlStringRGB(predictiveColor);
-                        predictiveText.text = $"<color=#{predictionColorHex}>{typeInfo}</color>";
+                        predictiveText.text = commandInputField.text + $"{commandName[currentToken.Length..]}<color=#{predictionColorHex}>{typeInfo}</color>";
                         return;
                     }
                 }
