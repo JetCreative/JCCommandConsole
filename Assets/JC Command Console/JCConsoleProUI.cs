@@ -86,9 +86,9 @@ namespace JetCreative.CommandConsolePro
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Ensure the console is initially disabled
-            // if (consolePanel != null)
-            //     consolePanel.SetActive(false);
+            //Ensure the console is initially disabled
+            if (consolePanel != null)
+                consolePanel.SetActive(false);
 
             // Initialize UI if not set through inspector
             VerifyUI();
@@ -458,8 +458,8 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         private void UpdatePredictiveText(string currentInput)
         {
-            if (predictiveText == null)
-                return;
+            // if (predictiveText == null)
+            //     return;
 
             if (string.IsNullOrEmpty(currentInput))
             {
@@ -470,7 +470,7 @@ namespace JetCreative.CommandConsolePro
             // Parse the current input to identify tokens
             List<string> tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             
-            JCCommandConsolePro.RemoveConsecutiveEmptyEntries(tokens);
+            //JCCommandConsolePro.RemoveConsecutiveEmptyEntries(tokens);
             
             // Check if the last token is valid
             //string lastToken = tokens[^1] != "" ? tokens[^1] : tokens[^2];

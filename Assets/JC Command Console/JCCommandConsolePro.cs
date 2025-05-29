@@ -82,7 +82,7 @@ namespace JetCreative.CommandConsolePro
             
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Debug.Log(fieldCommands.Count);
+//            Debug.Log(fieldCommands.Count);
         }
 
         #endregion
@@ -1011,7 +1011,7 @@ namespace JetCreative.CommandConsolePro
             var tokens = currentInput.Split(new[] { ' ' }, StringSplitOptions.None).ToList();
             RemoveConsecutiveEmptyEntries(tokens);
 
-            Debug.Log("tokens" + tokens + "tokens count" + tokens.Count);
+//            Debug.Log("tokens" + tokens + "tokens count" + tokens.Count);
             
             var predictions = new List<string>();
             
