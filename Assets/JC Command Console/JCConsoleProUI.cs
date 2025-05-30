@@ -72,6 +72,17 @@ namespace JetCreative.CommandConsolePro
 
         #endregion
 
+        #region Cursor Management
+
+        [Header("Cursor Settings")]
+        [SerializeField] private bool forceMouseVisibleOnOpen = true;
+
+        // Store previous cursor state
+        private CursorLockMode previousCursorLockMode;
+        private bool previousCursorVisible;
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void Awake()
@@ -239,7 +250,18 @@ namespace JetCreative.CommandConsolePro
             if (consolePanel == null)
                 return;
 
+            // Store current cursor state before opening console
+            previousCursorLockMode = Cursor.lockState;
+            previousCursorVisible = Cursor.visible;
+
             consolePanel.SetActive(true);
+            
+            // Apply cursor settings for console use
+            if (forceMouseVisibleOnOpen)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
             
             // Ensure input field is selected and focused
             if (commandInputField != null)
@@ -262,6 +284,10 @@ namespace JetCreative.CommandConsolePro
                 return;
 
             consolePanel.SetActive(false);
+            
+            // Restore previous cursor state
+            Cursor.lockState = previousCursorLockMode;
+            Cursor.visible = previousCursorVisible;
         }
 
         /// <summary>
