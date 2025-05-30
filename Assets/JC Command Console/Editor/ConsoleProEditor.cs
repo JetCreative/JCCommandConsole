@@ -460,7 +460,8 @@ namespace JetCreative.CommandConsolePro
                 TMP_Text tmpText = outputText.GetComponent<TMP_Text>();
                 tmpText.alignment = TextAlignmentOptions.TopLeft;
                 tmpText.fontSize = 16;
-                tmpText.enableWordWrapping = true;
+                //tmpText.enableWordWrapping = true;
+                tmpText.textWrappingMode = TextWrappingModes.Normal;
                 
                 // Setup scroll rect references
                 scrollRect.content = contentRT;
@@ -470,13 +471,13 @@ namespace JetCreative.CommandConsolePro
                 scrollRect.scrollSensitivity = 20;
                 
                 // Hook up references to the console UI component
-                consoleUI.consolePanel = consolePanel;
-                consoleUI.outputScrollRect = scrollRect;
-                consoleUI.outputText = tmpText;
-                consoleUI.commandInputField = inputField.GetComponent<TMP_InputField>();
-                consoleUI.predictiveText = predictiveText.GetComponent<TMP_Text>();
-                consoleUI.submitButton = submitButton.GetComponent<Button>();
-                consoleUI.closeButton = exitButton.GetComponent<Button>();
+                // consoleUI.consolePanel = consolePanel;
+                // consoleUI.outputScrollRect = scrollRect;
+                // consoleUI.outputText = tmpText;
+                // consoleUI.commandInputField = inputField.GetComponent<TMP_InputField>();
+                // consoleUI.predictiveText = predictiveText.GetComponent<TMP_Text>();
+                // consoleUI.submitButton = submitButton.GetComponent<Button>();
+                // consoleUI.closeButton = exitButton.GetComponent<Button>();
                 
                 // Initially disable the console panel
                 consolePanel.SetActive(false);

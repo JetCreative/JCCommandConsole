@@ -1,0 +1,175 @@
+.root {
+    padding: 10px;
+}
+
+.banner {
+    background-color: rgb(51, 76, 128);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    align-items: center;
+    justify-content: center;
+}
+
+.banner-title {
+    font-size: 18px;
+    -unity-font-style: bold;
+    color: white;
+    -unity-text-align: middle-center;
+    margin-bottom: 5px;
+}
+
+.banner-subtitle {
+    font-size: 12px;
+    -unity-font-style: italic;
+    color: rgb(200, 200, 200);
+    -unity-text-align: middle-center;
+}
+
+.section {
+    margin-bottom: 2px;
+    border-width: 1px;
+    border-color: rgb(128, 128, 128);
+    border-radius: 3px;
+    padding: 8px;
+}
+
+.section > .unity-foldout__toggle {
+    font-size: 14px;
+    -unity-font-style: bold;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.section > .unity-foldout__toggle > .unity-foldout__checkmark {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.section-content {
+    padding: 10px;
+    padding-top: 5px;
+    margin-top: 5px;
+    padding-bottom: 5px;
+}
+
+.section-content .unity-base-field__aligned {
+    margin-bottom: 5px;
+}
+
+.section-content .unity-base-field__aligned .unity-base-field__label {
+    flex-grow: 1;
+}
+
+.section-content .unity-base-field__aligned .unity-base-field__input {
+    justify-content: flex-end;
+}
+
+.counts-container {
+    background-color: rgba(82, 78, 78, 0);
+    padding: 12px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: rgb(180, 180, 180);
+}
+
+.counts-title {
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+}
+
+.count-label {
+    font-size: 11px;
+    margin-bottom: 3px;
+    padding-left: 10px;
+}
+
+.total-count-label {
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-top: 8px;
+    padding-left: 10px;
+    color: rgb(165, 165, 165);
+}
+
+.subsection {
+    margin-bottom: 6px;
+    margin-left: 10px;
+    border-width: 1px;
+    border-color: rgb(200, 200, 200);
+    border-radius: 2px;
+    padding: 6px;
+}
+
+.subsection > .unity-foldout__toggle {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.subsection > .unity-foldout__toggle > .unity-foldout__checkmark {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.subsection-content {
+    padding: 8px;
+    margin-top: 5px;
+}
+
+.commands-scroll {
+    max-height: 200px;
+    min-height: 50px;
+    padding: 5px;
+}
+
+.command-name-field {
+    margin-bottom: 2px;
+    font-size: 10px;
+}
+
+.command-name-field > .unity-text-field__input {
+    background-color: rgb(250, 250, 250);
+    border-color: rgb(180, 180, 180);
+}
+
+.no-commands-label {
+    font-size: 10px;
+    -unity-font-style: italic;
+    color: rgb(128, 128, 128);
+    -unity-text-align: middle-center;
+    padding: 10px;
+}
+
+.regenerate-button {
+    height: 30px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-top: 15px;
+    background-color: rgb(100, 150, 100);
+    border-color: rgb(80, 120, 80);
+    color: white;
+}
+
+.regenerate-button:hover {
+    background-color: rgb(120, 170, 120);
+}
+
+.regenerate-button:active {
+    background-color: rgb(80, 130, 80);
+}
+
+.unity-theme-env-variables--default-dark .counts-container {
+    background-color: rgb(60, 60, 60);
+    border-color: rgb(80, 80, 80);
+}
+
+.unity-theme-env-variables--default-dark .command-name-field > .unity-text-field__input {
+    background-color: rgb(50, 50, 50);
+    border-color: rgb(80, 80, 80);
+}
+
+.unity-theme-env-variables--default-dark .no-commands-label {
+    color: rgb(160, 160, 160);
+}

@@ -38,8 +38,6 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         public MethodDictionary MethodCommands = new ();
         
-        public int MethodCount;
-        
         /// <summary>
         /// Dictionary of property commands with getters, keyed by command name
         /// </summary>

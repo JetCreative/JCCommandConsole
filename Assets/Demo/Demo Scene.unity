@@ -747,6 +747,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4476150674033935258, guid: c02616c0e912cf348b922c55378dab2f, type: 3}
+      propertyPath: m_Navigation.m_Mode
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 5489875596574792826, guid: c02616c0e912cf348b922c55378dab2f, type: 3}
       propertyPath: m_Name
       value: Console Pro UI
