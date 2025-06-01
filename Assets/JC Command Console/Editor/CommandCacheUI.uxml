@@ -1,0 +1,58 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/JC%20Command%20Console/Editor/CommandCacheSytleSheet.uss?fileID=7433441132597879392&amp;guid=7d5144e39df21d746b30c1f80ae16990&amp;type=3#CommandCacheSytleSheet" />
+    <ui:VisualElement name="root" class="root">
+        <ui:VisualElement name="banner" class="banner">
+            <ui:Label text="Command Cache" name="banner-title" class="banner-title" />
+            <ui:Label text="Command Console by Jet Creative" name="banner-subtitle" class="banner-subtitle" />
+        </ui:VisualElement>
+        <ui:Foldout text="Settings" name="settings-section" value="true" class="section">
+            <ui:VisualElement name="settings-content" class="section-content">
+                <uie:PropertyField binding-path="IncludePrivateMembers" />
+                <uie:PropertyField binding-path="IncludeExampleCommands" />
+                <uie:PropertyField binding-path="ShowIncludeNamespaces" />
+                <uie:PropertyField binding-path="IncludeNamespaces" name="include-namespaces-field" />
+                <uie:PropertyField binding-path="ShowExcludeNamespaces" />
+                <uie:PropertyField binding-path="ExcludeNamespaces" name="exclude-namespaces-field" />
+            </ui:VisualElement>
+        </ui:Foldout>
+        <ui:Foldout text="Current Command Cache Info" name="cache-info-section" value="true" class="section">
+            <ui:VisualElement name="cache-info-content" class="section-content">
+                <ui:VisualElement name="counts-container" class="counts-container">
+                    <ui:Label text="Command Counts:" class="counts-title" />
+                    <ui:Label name="method-count" class="count-label" />
+                    <ui:Label name="property-get-count" class="count-label" />
+                    <ui:Label name="property-set-count" class="count-label" />
+                    <ui:Label name="field-count" class="count-label" />
+                    <ui:Label name="delegate-count" class="count-label" />
+                    <ui:Label name="total-count" class="total-count-label" style="color: rgb(184, 184, 184);" />
+                </ui:VisualElement>
+                <ui:Foldout text="Method Commands" name="method-commands" value="false" class="subsection">
+                    <ui:VisualElement name="method-commands-content" class="subsection-content">
+                        <ui:ScrollView name="method-commands-scroll" class="commands-scroll" />
+                    </ui:VisualElement>
+                </ui:Foldout>
+                <ui:Foldout text="Property Get Commands" name="property-get-commands" value="false" class="subsection">
+                    <ui:VisualElement name="property-get-commands-content" class="subsection-content">
+                        <ui:ScrollView name="property-get-commands-scroll" class="commands-scroll" />
+                    </ui:VisualElement>
+                </ui:Foldout>
+                <ui:Foldout text="Property Set Commands" name="property-set-commands" value="false" class="subsection">
+                    <ui:VisualElement name="property-set-commands-content" class="subsection-content">
+                        <ui:ScrollView name="property-set-commands-scroll" class="commands-scroll" />
+                    </ui:VisualElement>
+                </ui:Foldout>
+                <ui:Foldout text="Field Commands" name="field-commands" value="false" class="subsection">
+                    <ui:VisualElement name="field-commands-content" class="subsection-content">
+                        <ui:ScrollView name="field-commands-scroll" class="commands-scroll" />
+                    </ui:VisualElement>
+                </ui:Foldout>
+                <ui:Foldout text="Delegate Commands" name="delegate-commands" value="false" class="subsection">
+                    <ui:VisualElement name="delegate-commands-content" class="subsection-content">
+                        <ui:ScrollView name="delegate-commands-scroll" class="commands-scroll" />
+                    </ui:VisualElement>
+                </ui:Foldout>
+            </ui:VisualElement>
+        </ui:Foldout>
+        <ui:Button text="Regenerate Cache" name="regenerate-button" class="regenerate-button" />
+    </ui:VisualElement>
+</ui:UXML>

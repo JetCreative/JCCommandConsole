@@ -92,7 +92,7 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
             ""id"": ""75100089-4f58-4c6e-9f80-91c0fe9a2425"",
             ""actions"": [
                 {
-                    ""name"": ""OpenWindow"",
+                    ""name"": ""ToggleWindow"",
                     ""type"": ""Button"",
                     ""id"": ""9408a75a-4669-47b9-8a8e-4894342670fe"",
                     ""expectedControlType"": """",
@@ -110,7 +110,7 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Enter"",
+                    ""name"": ""Submit"",
                     ""type"": ""Button"",
                     ""id"": ""bd840caa-38db-4d98-b495-fa85d1d7d3ce"",
                     ""expectedControlType"": """",
@@ -119,9 +119,18 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""LastInput"",
+                    ""name"": ""Previous Command"",
                     ""type"": ""Button"",
                     ""id"": ""7da996dd-2531-47f8-81a7-31187c5c2810"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Next Command"",
+                    ""type"": ""Button"",
+                    ""id"": ""61dde892-d7ba-4bf9-a5ca-95f9377e2031"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -132,11 +141,11 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""2f190d0c-4061-4f37-94f7-a853de9044a1"",
-                    ""path"": ""<Keyboard>/c"",
+                    ""path"": ""<Keyboard>/backquote"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""OpenWindow"",
+                    ""action"": ""ToggleWindow"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -158,7 +167,7 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Enter"",
+                    ""action"": ""Submit"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -169,7 +178,18 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""LastInput"",
+                    ""action"": ""Previous Command"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""75c43cfe-8032-466a-9c38-bda863b34626"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Next Command"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -180,10 +200,11 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
 }");
         // Console
         m_Console = asset.FindActionMap("Console", throwIfNotFound: true);
-        m_Console_OpenWindow = m_Console.FindAction("OpenWindow", throwIfNotFound: true);
+        m_Console_ToggleWindow = m_Console.FindAction("ToggleWindow", throwIfNotFound: true);
         m_Console_AcceptPrediction = m_Console.FindAction("AcceptPrediction", throwIfNotFound: true);
-        m_Console_Enter = m_Console.FindAction("Enter", throwIfNotFound: true);
-        m_Console_LastInput = m_Console.FindAction("LastInput", throwIfNotFound: true);
+        m_Console_Submit = m_Console.FindAction("Submit", throwIfNotFound: true);
+        m_Console_PreviousCommand = m_Console.FindAction("Previous Command", throwIfNotFound: true);
+        m_Console_NextCommand = m_Console.FindAction("Next Command", throwIfNotFound: true);
     }
 
     ~@DemoInputs()
@@ -264,10 +285,11 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
     // Console
     private readonly InputActionMap m_Console;
     private List<IConsoleActions> m_ConsoleActionsCallbackInterfaces = new List<IConsoleActions>();
-    private readonly InputAction m_Console_OpenWindow;
+    private readonly InputAction m_Console_ToggleWindow;
     private readonly InputAction m_Console_AcceptPrediction;
-    private readonly InputAction m_Console_Enter;
-    private readonly InputAction m_Console_LastInput;
+    private readonly InputAction m_Console_Submit;
+    private readonly InputAction m_Console_PreviousCommand;
+    private readonly InputAction m_Console_NextCommand;
     /// <summary>
     /// Provides access to input actions defined in input action map "Console".
     /// </summary>
@@ -280,21 +302,25 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// </summary>
         public ConsoleActions(@DemoInputs wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "Console/OpenWindow".
+        /// Provides access to the underlying input action "Console/ToggleWindow".
         /// </summary>
-        public InputAction @OpenWindow => m_Wrapper.m_Console_OpenWindow;
+        public InputAction @ToggleWindow => m_Wrapper.m_Console_ToggleWindow;
         /// <summary>
         /// Provides access to the underlying input action "Console/AcceptPrediction".
         /// </summary>
         public InputAction @AcceptPrediction => m_Wrapper.m_Console_AcceptPrediction;
         /// <summary>
-        /// Provides access to the underlying input action "Console/Enter".
+        /// Provides access to the underlying input action "Console/Submit".
         /// </summary>
-        public InputAction @Enter => m_Wrapper.m_Console_Enter;
+        public InputAction @Submit => m_Wrapper.m_Console_Submit;
         /// <summary>
-        /// Provides access to the underlying input action "Console/LastInput".
+        /// Provides access to the underlying input action "Console/PreviousCommand".
         /// </summary>
-        public InputAction @LastInput => m_Wrapper.m_Console_LastInput;
+        public InputAction @PreviousCommand => m_Wrapper.m_Console_PreviousCommand;
+        /// <summary>
+        /// Provides access to the underlying input action "Console/NextCommand".
+        /// </summary>
+        public InputAction @NextCommand => m_Wrapper.m_Console_NextCommand;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -321,18 +347,21 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_ConsoleActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_ConsoleActionsCallbackInterfaces.Add(instance);
-            @OpenWindow.started += instance.OnOpenWindow;
-            @OpenWindow.performed += instance.OnOpenWindow;
-            @OpenWindow.canceled += instance.OnOpenWindow;
+            @ToggleWindow.started += instance.OnToggleWindow;
+            @ToggleWindow.performed += instance.OnToggleWindow;
+            @ToggleWindow.canceled += instance.OnToggleWindow;
             @AcceptPrediction.started += instance.OnAcceptPrediction;
             @AcceptPrediction.performed += instance.OnAcceptPrediction;
             @AcceptPrediction.canceled += instance.OnAcceptPrediction;
-            @Enter.started += instance.OnEnter;
-            @Enter.performed += instance.OnEnter;
-            @Enter.canceled += instance.OnEnter;
-            @LastInput.started += instance.OnLastInput;
-            @LastInput.performed += instance.OnLastInput;
-            @LastInput.canceled += instance.OnLastInput;
+            @Submit.started += instance.OnSubmit;
+            @Submit.performed += instance.OnSubmit;
+            @Submit.canceled += instance.OnSubmit;
+            @PreviousCommand.started += instance.OnPreviousCommand;
+            @PreviousCommand.performed += instance.OnPreviousCommand;
+            @PreviousCommand.canceled += instance.OnPreviousCommand;
+            @NextCommand.started += instance.OnNextCommand;
+            @NextCommand.performed += instance.OnNextCommand;
+            @NextCommand.canceled += instance.OnNextCommand;
         }
 
         /// <summary>
@@ -344,18 +373,21 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// <seealso cref="ConsoleActions" />
         private void UnregisterCallbacks(IConsoleActions instance)
         {
-            @OpenWindow.started -= instance.OnOpenWindow;
-            @OpenWindow.performed -= instance.OnOpenWindow;
-            @OpenWindow.canceled -= instance.OnOpenWindow;
+            @ToggleWindow.started -= instance.OnToggleWindow;
+            @ToggleWindow.performed -= instance.OnToggleWindow;
+            @ToggleWindow.canceled -= instance.OnToggleWindow;
             @AcceptPrediction.started -= instance.OnAcceptPrediction;
             @AcceptPrediction.performed -= instance.OnAcceptPrediction;
             @AcceptPrediction.canceled -= instance.OnAcceptPrediction;
-            @Enter.started -= instance.OnEnter;
-            @Enter.performed -= instance.OnEnter;
-            @Enter.canceled -= instance.OnEnter;
-            @LastInput.started -= instance.OnLastInput;
-            @LastInput.performed -= instance.OnLastInput;
-            @LastInput.canceled -= instance.OnLastInput;
+            @Submit.started -= instance.OnSubmit;
+            @Submit.performed -= instance.OnSubmit;
+            @Submit.canceled -= instance.OnSubmit;
+            @PreviousCommand.started -= instance.OnPreviousCommand;
+            @PreviousCommand.performed -= instance.OnPreviousCommand;
+            @PreviousCommand.canceled -= instance.OnPreviousCommand;
+            @NextCommand.started -= instance.OnNextCommand;
+            @NextCommand.performed -= instance.OnNextCommand;
+            @NextCommand.canceled -= instance.OnNextCommand;
         }
 
         /// <summary>
@@ -397,12 +429,12 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
     public interface IConsoleActions
     {
         /// <summary>
-        /// Method invoked when associated input action "OpenWindow" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "ToggleWindow" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnOpenWindow(InputAction.CallbackContext context);
+        void OnToggleWindow(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "AcceptPrediction" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -411,18 +443,25 @@ public partial class @DemoInputs: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnAcceptPrediction(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Enter" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Submit" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnEnter(InputAction.CallbackContext context);
+        void OnSubmit(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "LastInput" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Previous Command" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnLastInput(InputAction.CallbackContext context);
+        void OnPreviousCommand(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Next Command" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnNextCommand(InputAction.CallbackContext context);
     }
 }

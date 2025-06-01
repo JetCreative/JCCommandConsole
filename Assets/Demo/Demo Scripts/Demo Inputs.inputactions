@@ -6,7 +6,7 @@
             "id": "75100089-4f58-4c6e-9f80-91c0fe9a2425",
             "actions": [
                 {
-                    "name": "OpenWindow",
+                    "name": "ToggleWindow",
                     "type": "Button",
                     "id": "9408a75a-4669-47b9-8a8e-4894342670fe",
                     "expectedControlType": "",
@@ -24,7 +24,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Enter",
+                    "name": "Submit",
                     "type": "Button",
                     "id": "bd840caa-38db-4d98-b495-fa85d1d7d3ce",
                     "expectedControlType": "",
@@ -33,9 +33,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "LastInput",
+                    "name": "Previous Command",
                     "type": "Button",
                     "id": "7da996dd-2531-47f8-81a7-31187c5c2810",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Next Command",
+                    "type": "Button",
+                    "id": "61dde892-d7ba-4bf9-a5ca-95f9377e2031",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -46,11 +55,11 @@
                 {
                     "name": "",
                     "id": "2f190d0c-4061-4f37-94f7-a853de9044a1",
-                    "path": "<Keyboard>/c",
+                    "path": "<Keyboard>/backquote",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "OpenWindow",
+                    "action": "ToggleWindow",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -72,7 +81,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Enter",
+                    "action": "Submit",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -83,7 +92,18 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "LastInput",
+                    "action": "Previous Command",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "75c43cfe-8032-466a-9c38-bda863b34626",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Next Command",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
