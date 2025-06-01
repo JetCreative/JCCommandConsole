@@ -5,7 +5,6 @@ using System.Reflection;
 using JetCreative.Serialization;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace JetCreative.CommandConsolePro

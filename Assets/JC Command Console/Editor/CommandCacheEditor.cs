@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using JetCreative.CommandConsolePro;
 using System.Linq;
 
 namespace JetCreative.CommandConsolePro.Editor

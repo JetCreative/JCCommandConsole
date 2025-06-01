@@ -1,12 +1,15 @@
 ﻿
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
+// ReSharper disable UnusedMember.Local
+// ReSharper disable NotAccessedField.Local
 
 namespace JetCreative.CommandConsolePro
 {
     /// <summary>
     /// Example component containing various commands that can be called via the Command Console Pro.
-    /// This serves as a demonstration of the different types of elements that can be exposed to the console.
+    /// This serves as a demonstration of the different elements that can be exposed to the console.
     /// </summary>
     public class ConsoleExampleCommands : MonoBehaviour
     {
@@ -16,22 +19,24 @@ namespace JetCreative.CommandConsolePro
         /// Example of a field that can be get/set via the console.
         /// Usage: get health or set health 100
         /// </summary>
-        [Command]
-        public float health = 100f;
+        [FormerlySerializedAs("health")] [Command]
+        public float Health = 100f;
 
         /// <summary>
         /// Example of a private field with a custom command name.
         /// Usage: get ammo or set ammo 50
         /// </summary>
         [Command("ammo", true)]
-        private int _ammunition = 30;
+#pragma warning disable CS0414 // Field is assigned but its value is never used
+        private int ammunition = 30;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
 
         /// <summary>
         /// Example of a static field accessible from anywhere.
         /// Usage: get gametime or set gametime 300
         /// </summary>
         [Command]
-        public static float gameTime = 0f;
+        public static float _GameTime;
 
         #endregion
 
@@ -56,7 +61,7 @@ namespace JetCreative.CommandConsolePro
         /// Usage: get healthpercent
         /// </summary>
         [Command("healthpercent")]
-        public float HealthPercentage => (health / 100f) * 100f;
+        public float HealthPercentage => (Health / 100f) * 100f;
 
         /// <summary>
         /// Example of a property with custom logic.
@@ -65,11 +70,11 @@ namespace JetCreative.CommandConsolePro
         [Command]
         public bool IsAlive
         {
-            get => health > 0;
+            get => Health > 0;
             set
             {
-                if (!value) health = 0;
-                else if (health <= 0) health = 1;
+                if (!value) Health = 0;
+                else if (Health <= 0) Health = 1;
             }
         }
 
@@ -91,7 +96,7 @@ namespace JetCreative.CommandConsolePro
         [Command]
         public void ResetHealth()
         {
-            health = 100f;
+            Health = 100f;
             Debug.Log("Health reset to 100");
         }
 
@@ -102,9 +107,9 @@ namespace JetCreative.CommandConsolePro
         [Command]
         public float AddHealth(float amount)
         {
-            health = Mathf.Clamp(health + amount, 0, 100);
-            Debug.Log($"Added {amount} health. Current health: {health}");
-            return health;
+            Health = Mathf.Clamp(Health + amount, 0, 100);
+            Debug.Log($"Added {amount} health. Current health: {Health}");
+            return Health;
         }
 
         /// <summary>
@@ -178,7 +183,7 @@ namespace JetCreative.CommandConsolePro
         /// Usage: call ongamepaused true
         /// </summary>
         [Command(includePrivate: true)]
-        private static Action<bool> OnGamePaused;
+        private static Action<bool> _onGamePaused;
 
         #endregion
 
@@ -189,11 +194,11 @@ namespace JetCreative.CommandConsolePro
             // Initialize delegates to prevent null reference exceptions
             OnHealthChanged = newHealth => 
             {
-                health = newHealth;
+                Health = newHealth;
                 Debug.Log($"Health changed to {newHealth}");
             };
 
-            OnGamePaused = isPaused => 
+            _onGamePaused = isPaused => 
             {
                 Debug.Log($"Game {(isPaused ? "paused" : "resumed")}");
                 // In a real implementation, this would pause/resume the game
@@ -203,7 +208,7 @@ namespace JetCreative.CommandConsolePro
         private void Update()
         {
             // Update game time (for demonstration purposes)
-            gameTime += Time.deltaTime;
+            _GameTime += Time.deltaTime;
         }
 
         #endregion
