@@ -5,13 +5,52 @@ using System.Reflection;
 using JetCreative.Serialization;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
+using UnityEngine.Serialization;
+
+// ReSharper disable InconsistentNaming
 
 namespace JetCreative.CommandConsolePro
 {
     /// <summary>
-    /// Static class for handling command registration and execution for the Command Console Pro system.
+    /// Core system for the Command Console Pro package.
+    /// This class manages command registration, execution, and caching.
+    /// It provides a runtime command console system that can discover and execute 
+    /// methods, properties, and fields marked with the [Command] attribute.
     /// </summary>
+    /// <remarks>
+    /// <para>Key Features:</para>
+    /// <list type="bullet">
+    /// <item><description>Automatic command discovery via reflection</description></item>
+    /// <item><description>Support for static and instance methods</description></item>
+    /// <item><description>Property get/set operations</description></item>
+    /// <item><description>Field access and modification</description></item>
+    /// <item><description>Delegate invocation</description></item>
+    /// <item><description>GameObject targeting with @ syntax</description></item>
+    /// <item><description>Command prediction and auto-completion</description></item>
+    /// </list>
+    /// 
+    /// <para>Usage:</para>
+    /// <code>
+    /// // Get the singleton instance
+    /// var console = JCCommandConsolePro.Instance;
+    /// 
+    /// // Generate command cache (usually done automatically)
+    /// console.GenerateCommandCache();
+    /// 
+    /// // Execute a command
+    /// string result = console.ExecuteCommand("call MyMethod");
+    /// </code>
+    /// 
+    /// <para>Basic Command Syntax:</para>
+    /// <list type="table">
+    /// <item><term>call method_name param1 param2</term><description>Call a method with parameters</description></item>
+    /// <item><term>get property_name</term><description>Get a property value</description></item>
+    /// <item><term>set property_name value</term><description>Set a property value</description></item>
+    /// <item><term>@GameObject call method_name</term><description>Target a specific GameObject</description></item>
+    /// <item><term>##Tag set fieldname value</term><description>Set fieldname value on all gameobjects marked with tag name</description></item>
+    /// </list>
+    /// </remarks>
+
     public class JCCommandConsolePro: MonoBehaviour
     {
         #region Command Caches
@@ -19,39 +58,39 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Dictionary of method commands, keyed by command name
         /// </summary>
-        private Dictionary<string, SerializableMethodInfo> methodCommands => _cache.MethodCommands;
+        private Dictionary<string, SerializableMethodInfo> methodCommands => cache.MethodCommands;
 
         /// <summary>
         /// Dictionary of property commands, keyed by command name
         /// </summary>
-        private Dictionary<string, SerializedPropertyInfo> propertyGetCommands => _cache.PropertyGetCommands;
+        private Dictionary<string, SerializedPropertyInfo> propertyGetCommands => cache.PropertyGetCommands;
         
         /// <summary>
         /// Dictionary of property commands, keyed by command name
         /// </summary>
-        private Dictionary<string, SerializedPropertyInfo> propertySetCommands => _cache.PropertySetCommands;
+        private Dictionary<string, SerializedPropertyInfo> propertySetCommands => cache.PropertySetCommands;
 
         /// <summary>
         /// Dictionary of field commands, keyed by command name
         /// </summary>
-        private Dictionary<string, SerializedFieldInfo> fieldCommands => _cache.FieldCommands;
+        private Dictionary<string, SerializedFieldInfo> fieldCommands => cache.FieldCommands;
 
         /// <summary>
         /// Dictionary of delegate commands, keyed by command name
         /// </summary>
-        private Dictionary<string, SerializedFieldInfo> delegateCommands => _cache.DelegateCommands;
+        private Dictionary<string, SerializedFieldInfo> delegateCommands => cache.DelegateCommands;
 
         /// <summary>
         /// Dictionary mapping commands to their declaring types, used for static command execution
         /// </summary>
-        private Dictionary<string, Type> commandDeclaringTypes => _cache.CommandDeclaringTypes;
+        private Dictionary<string, Type> commandDeclaringTypes => cache.CommandDeclaringTypes;
 
         /// <summary>
         /// Stores whether each command is static or instance-based
         /// </summary>
-        private Dictionary<string, bool> isCommandStatic => _cache.IsCommandStatic;
+        private Dictionary<string, bool> isCommandStatic => cache.IsCommandStatic;
         
-        [SerializeField] private CommandCache _cache;
+        [FormerlySerializedAs("_cache")] [SerializeField] private CommandCache cache;
         
         
         #endregion
@@ -63,7 +102,7 @@ namespace JetCreative.CommandConsolePro
         {
             if (Instance != null && Instance != this) 
             {
-                this.enabled = false;
+                enabled = false;
                 throw new Exception("Only one instance of JCCommandConsolePro can exist at a time.");
             }
             
@@ -91,18 +130,18 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Array of preface commands used to indicate specific intentions
         /// </summary>
-        public static string[] TargetCmds = { "@", "@@", "#", "##", "select" };
+        public static readonly string[] TargetCmds = { "@", "@@", "#", "##", "select" };
 
         /// <summary>
         /// Array of console commands that set intention for the next word
         /// </summary>
-        public static string[] consolecmds = { "get", "set", "call" };
+        public static readonly string[] ConsoleCmds = { "get", "set", "call" };
 
         #endregion
 
         #region Command Registration
 
-        public bool HasGeneratedCache => _cache;
+        public bool HasGeneratedCache => cache;
         
         /// <summary>
         /// Generates a cache of all methods, delegates, properties, and field commands marked by the Command attribute.
@@ -115,19 +154,19 @@ namespace JetCreative.CommandConsolePro
         public int GenerateCommandCache(bool includePrivate = false, bool includeExampleCommands = true, 
             string[] includeNamespaces = null, string[] excludeNamespaces = null)
         {
-            if (!_cache)
+            if (!cache)
             {
-                _cache = GetCommandCache();
+                cache = GetCommandCache();
             }
             
             // Clear existing caches
-            _cache.MethodCommands.Clear();
-            _cache.PropertyGetCommands.Clear();
-            _cache.PropertySetCommands.Clear();
-            _cache.FieldCommands.Clear();
-            _cache.DelegateCommands.Clear();
-            _cache.CommandDeclaringTypes.Clear();
-            _cache.IsCommandStatic.Clear();
+            cache.MethodCommands.Clear();
+            cache.PropertyGetCommands.Clear();
+            cache.PropertySetCommands.Clear();
+            cache.FieldCommands.Clear();
+            cache.DelegateCommands.Clear();
+            cache.CommandDeclaringTypes.Clear();
+            cache.IsCommandStatic.Clear();
 
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
             // if (includePrivate)
@@ -150,7 +189,7 @@ namespace JetCreative.CommandConsolePro
                             continue;
 
                         // Skip if not in included namespace (when specified)
-                        if (includeNamespaces != null && includeNamespaces.Length > 0 && 
+                        if (includeNamespaces is { Length: > 0 } && 
                             !includeNamespaces.Any(ns => type.Namespace?.StartsWith(ns, StringComparison.OrdinalIgnoreCase) == true))
                             continue;
 
@@ -313,10 +352,10 @@ namespace JetCreative.CommandConsolePro
                 int currentTokenIndex = 0;
                 GameObject[] targetObjects = null;
 
-                // Check if first token is a target command
+                // Check if the first token is a target command
                 if (currentTokenIndex < tokens.Count && StartsWithAny(tokens[currentTokenIndex], TargetCmds, out string prefaceCmd))
                 {
-                    string objectIdentifier = tokens[currentTokenIndex].Substring(prefaceCmd.Length);
+                    string objectIdentifier = tokens[currentTokenIndex][prefaceCmd.Length..];
                     currentTokenIndex++;
 
                     // Handle different target commands
@@ -329,7 +368,7 @@ namespace JetCreative.CommandConsolePro
                             targetObjects = new[] { obj };
                             break;
                         case "@@":
-                            targetObjects = Object.FindObjectsOfType<GameObject>()
+                            targetObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None)
                                 .Where(go => go.name == objectIdentifier).ToArray();
                             if (targetObjects.Length == 0)
                                 return $"Error: No GameObjects with name '{objectIdentifier}' found.";
@@ -347,7 +386,7 @@ namespace JetCreative.CommandConsolePro
                             break;
                         case "select" :
                             #if UNITY_EDITOR
-                                var selectedObjects = UnityEditor.Selection.gameObjects;
+                                var selectedObjects = Selection.gameObjects;
                                 if (selectedObjects.Length == 0)
                                    return "Error: No GameObject selected in the Editor.";
                                 targetObjects = selectedObjects;
@@ -365,8 +404,8 @@ namespace JetCreative.CommandConsolePro
                     return "Error: Missing console command (get, set, call).";
 
                 string consoleCmd = tokens[currentTokenIndex].ToLower();
-                if (!consolecmds.Contains(consoleCmd))
-                    return $"Error: Invalid console command '{consoleCmd}'. Valid commands are: {string.Join(", ", consolecmds)}.";
+                if (!ConsoleCmds.Contains(consoleCmd))
+                    return $"Error: Invalid console command '{consoleCmd}'. Valid commands are: {string.Join(", ", ConsoleCmds)}.";
                 currentTokenIndex++;
 
                 // We need a command name next
@@ -494,7 +533,7 @@ namespace JetCreative.CommandConsolePro
                 var value = propertyInfo.GetValue(null);
                 return $"{propertyInfo.Name} = {FormatValue(value)}";
             }
-            else if (targetObjects != null && targetObjects.Length > 0)
+            else if (targetObjects is { Length: > 0 })
             {
                 List<string> results = new List<string>();
                 foreach (var targetObject in targetObjects)
@@ -507,6 +546,7 @@ namespace JetCreative.CommandConsolePro
                     }
                     else
                     {
+                        System.Diagnostics.Debug.Assert(propertyInfo.DeclaringType != null, "propertyInfo.DeclaringType != null");
                         results.Add($"Error: {targetObject.name} has no component of type {propertyInfo.DeclaringType.Name}.");
                     }
                 }
@@ -525,7 +565,7 @@ namespace JetCreative.CommandConsolePro
                 var value = fieldInfo.GetValue(null);
                 return $"{fieldInfo.Name} = {FormatValue(value)}";
             }
-            else if (targetObjects != null && targetObjects.Length > 0)
+            else if (targetObjects is { Length: > 0 })
             {
                 List<string> results = new List<string>();
                 foreach (var targetObject in targetObjects)
@@ -538,6 +578,7 @@ namespace JetCreative.CommandConsolePro
                     }
                     else
                     {
+                        System.Diagnostics.Debug.Assert(fieldInfo.DeclaringType != null, "fieldInfo.DeclaringType != null");
                         results.Add($"Error: {targetObject.name} has no component of type {fieldInfo.DeclaringType.Name}.");
                     }
                 }
@@ -563,7 +604,7 @@ namespace JetCreative.CommandConsolePro
                     propertyInfo.SetValue(null, convertedValue);
                     return $"Set {propertyInfo.Name} = {FormatValue(convertedValue)}";
                 }
-                else if (targetObjects != null && targetObjects.Length > 0)
+                else if (targetObjects is { Length: > 0 })
                 {
                     List<string> results = new List<string>();
                     foreach (var targetObject in targetObjects)
@@ -576,6 +617,7 @@ namespace JetCreative.CommandConsolePro
                         }
                         else
                         {
+                            System.Diagnostics.Debug.Assert(propertyInfo.DeclaringType != null, "propertyInfo.DeclaringType != null");
                             results.Add($"Error: {targetObject.name} has no component of type {propertyInfo.DeclaringType.Name}.");
                         }
                     }
@@ -606,7 +648,7 @@ namespace JetCreative.CommandConsolePro
                     fieldInfo.SetValue(null, convertedValue);
                     return $"Set {fieldInfo.Name} = {FormatValue(convertedValue)}";
                 }
-                else if (targetObjects != null && targetObjects.Length > 0)
+                else if (targetObjects is { Length: > 0 })
                 {
                     List<string> results = new List<string>();
                     foreach (var targetObject in targetObjects)
@@ -619,6 +661,7 @@ namespace JetCreative.CommandConsolePro
                         }
                         else
                         {
+                            System.Diagnostics.Debug.Assert(fieldInfo.DeclaringType != null, "fieldInfo.DeclaringType != null");
                             results.Add($"Error: {targetObject.name} has no component of type {fieldInfo.DeclaringType.Name}.");
                         }
                     }
@@ -659,7 +702,7 @@ namespace JetCreative.CommandConsolePro
                         ? $"Called {methodInfo.Name}()"
                         : $"{methodInfo.Name}() returned: {FormatValue(result)}";
                 }
-                else if (targetObjects != null && targetObjects.Length > 0)
+                else if (targetObjects is { Length: > 0 })
                 {
                     List<string> results = new List<string>();
                     foreach (var targetObject in targetObjects)
@@ -674,6 +717,7 @@ namespace JetCreative.CommandConsolePro
                         }
                         else
                         {
+                            System.Diagnostics.Debug.Assert(methodInfo.DeclaringType != null, "methodInfo.DeclaringType != null");
                             results.Add($"Error: {targetObject.name} has no component of type {methodInfo.DeclaringType.Name}.");
                         }
                     }
@@ -720,7 +764,7 @@ namespace JetCreative.CommandConsolePro
                         ? $"Invoked delegate {delegateField.Name}"
                         : $"Delegate {delegateField.Name} returned: {FormatValue(result)}";
                 }
-                else if (targetObjects != null && targetObjects.Length > 0)
+                else if (targetObjects is { Length: > 0 })
                 {
                     List<string> results = new List<string>();
                     foreach (var targetObject in targetObjects)
@@ -758,6 +802,7 @@ namespace JetCreative.CommandConsolePro
                         }
                         else
                         {
+                            System.Diagnostics.Debug.Assert(delegateField.DeclaringType != null, "delegateField.DeclaringType != null");
                             results.Add($"Error: {targetObject.name} has no component of type {delegateField.DeclaringType.Name}.");
                         }
                     }
@@ -909,17 +954,14 @@ namespace JetCreative.CommandConsolePro
         {
             var typeMap = new Dictionary<Type, Type>
             {
-                { typeof(System.Single), typeof(float) },
-                { typeof(System.Int32), typeof(int) },
-                { typeof(System.Boolean), typeof(bool) },
-                { typeof(System.Double), typeof(double) },
-                { typeof(System.String), typeof(string) }
+                { typeof(Single), typeof(float) },
+                { typeof(Int32), typeof(int) },
+                { typeof(Boolean), typeof(bool) },
+                { typeof(Double), typeof(double) },
+                { typeof(String), typeof(string) }
             };
 
-            if (typeMap.TryGetValue(type, out Type normalizedType))
-                return normalizedType;
-
-            return type;
+            return typeMap.GetValueOrDefault(type, type);
         }
 
         /// <summary>
@@ -1004,10 +1046,10 @@ namespace JetCreative.CommandConsolePro
         /// <summary>
         /// Returns all enum values for a given enum type.
         /// </summary>
-        public static string[] GetEnumValues(Type enumType)
+        private static string[] GetEnumValues(Type enumType)
         {
             if (enumType == null || !enumType.IsEnum)
-                return new string[0];
+                return Array.Empty<string>();
                 
             return Enum.GetNames(enumType);
         }
@@ -1061,7 +1103,7 @@ namespace JetCreative.CommandConsolePro
             else
                 tokens.Insert(0, "");
             
-            if ( tokens.Count > 1 && consolecmds.Contains(tokens[1].ToLower()))
+            if ( tokens.Count > 1 && ConsoleCmds.Contains(tokens[1].ToLower()))
                 consoleCmd = tokens[1].ToLower();
             
             if (tokens.Count > 2 && Instance.GetCommandTypeInfo(tokens[2].ToLower()) != null)
@@ -1082,8 +1124,8 @@ namespace JetCreative.CommandConsolePro
                         var prefix = token.StartsWith("@@") ? "@@" : "@";
                         var partialName = token.Substring(prefix.Length);
                         
-                        // Get all GameObject names in scene
-                        foreach (var go in FindObjectsOfType<GameObject>())
+                        // Get all GameObject names in the scene
+                        foreach (var go in FindObjectsByType<GameObject>(FindObjectsSortMode.None))
                         {
                             if (string.IsNullOrEmpty(partialName) || go.name.StartsWith(partialName, StringComparison.OrdinalIgnoreCase))
                             {
@@ -1097,19 +1139,19 @@ namespace JetCreative.CommandConsolePro
                         var prefix = token.StartsWith("##") ? "##" : "#";
                         var partialTag = token.Substring(prefix.Length);
                         
-                        foreach (var tag in UnityEditorInternal.InternalEditorUtility.tags)
+                        foreach (var foundTag in UnityEditorInternal.InternalEditorUtility.tags)
                         {
-                            if (string.IsNullOrEmpty(partialTag) || tag.StartsWith(partialTag, StringComparison.OrdinalIgnoreCase))
+                            if (string.IsNullOrEmpty(partialTag) || foundTag.StartsWith(partialTag, StringComparison.OrdinalIgnoreCase))
                             {
-                                predictions.Add(prefix + tag);
+                                predictions.Add(prefix + foundTag);
                             }
                         }
                     }
                 }
-                // If first token is "select", suggest console commands
+                // If the first token is "select", suggest console commands
                 else if (token == "select")
                 {
-                    predictions.AddRange(consolecmds);
+                    predictions.AddRange(ConsoleCmds);
                 }
                 // Suggest preface commands and "select"
                 else
@@ -1140,7 +1182,7 @@ namespace JetCreative.CommandConsolePro
             {
                 var partialCmd = tokens[1];
                 
-                foreach (var consoleCommand in consolecmds)
+                foreach (var consoleCommand in ConsoleCmds)
                 {
                     if (string.IsNullOrEmpty(partialCmd) || consoleCommand.StartsWith(partialCmd, StringComparison.OrdinalIgnoreCase))
                     {
@@ -1264,6 +1306,27 @@ namespace JetCreative.CommandConsolePro
             }
             
             return predictions.ToArray();
+        }
+        
+        /// <summary>
+        /// Gets information about the current command cache status.
+        /// </summary>
+        /// <returns>String containing cache statistics and status</returns>
+        public string GetCacheInfo()
+        {
+            var cache = GetCommandCache();
+            if (cache == null)
+                return "Command cache not found.";
+    
+            if (cache.IsEmpty())
+                return "Command cache is empty. Use 'Tools → Jet Creative → Command Console' to generate it.";
+    
+            return $"Command cache contains {cache.GetTotalCommandCount()} commands:\n" +
+                   $"• Methods: {cache.MethodCommands.Count}\n" +
+                   $"• Properties (Get): {cache.PropertyGetCommands.Count}\n" +
+                   $"• Properties (Set): {cache.PropertySetCommands.Count}\n" +
+                   $"• Fields: {cache.FieldCommands.Count}\n" +
+                   $"• Delegates: {cache.DelegateCommands.Count}";
         }
 
         #endregion

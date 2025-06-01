@@ -45,6 +45,7 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         /// <param name="commandName">Optional custom name for the command. If null, the element's name will be used.
         /// The stored command name will always be lower case.</param>
+        /// <param name="includePrivate">Optionally force including private access when generating the cache.</param>
         /// <remarks>
         /// Elements decorated with this attribute can be identified and invoked as commands in the console system.
         /// The <c>CommandName</c> property allows assigning an optional name for the command,
