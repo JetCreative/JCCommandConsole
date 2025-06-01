@@ -5,7 +5,7 @@
 .banner {
     background-color: rgb(51, 76, 128);
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
     border-radius: 5px;
     align-items: center;
     justify-content: center;
@@ -146,7 +146,7 @@
     height: 30px;
     font-size: 14px;
     -unity-font-style: bold;
-    margin-top: 15px;
+    margin-top: 5px;
     background-color: rgb(100, 150, 100);
     border-color: rgb(80, 120, 80);
     color: white;

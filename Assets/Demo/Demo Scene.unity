@@ -207,8 +207,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 610296410}
-  - component: {fileID: 610296409}
   - component: {fileID: 610296411}
+  - component: {fileID: 610296409}
   m_Layer: 0
   m_Name: Console Pro
   m_TagString: Untagged
@@ -246,6 +246,7 @@ MonoBehaviour:
   resultColor: {r: 1, g: 1, b: 1, a: 1}
   errorColor: {r: 1, g: 0.5, b: 0.5, a: 1}
   predictiveColor: {r: 0.7, g: 0.7, b: 0.7, a: 0.8}
+  forceMouseVisibleOnOpen: 1
 --- !u!4 &610296410
 Transform:
   m_ObjectHideFlags: 0
@@ -383,7 +384,7 @@ GameObject:
   - component: {fileID: 788171214}
   - component: {fileID: 788171215}
   m_Layer: 0
-  m_Name: Object1
+  m_Name: Object2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

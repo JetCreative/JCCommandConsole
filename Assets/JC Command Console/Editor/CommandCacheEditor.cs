@@ -62,6 +62,22 @@ namespace JetCreative.CommandConsolePro.Editor
 
             root.Add(banner);
 
+            // GitHub README Link
+            var readmeLink = new Button();
+            readmeLink.name = "readme-link";
+            readmeLink.text = "📖 View README on GitHub";
+            readmeLink.AddToClassList("readme-link");
+            readmeLink.style.marginTop = 1;
+            readmeLink.style.marginBottom = 1;
+            readmeLink.style.backgroundColor = new Color(0.06f, 0.06f, 0.12f, 0.75f);
+            readmeLink.style.color = Color.white;
+            readmeLink.style.borderTopWidth = 0;
+            readmeLink.style.borderBottomWidth = 0;
+            readmeLink.style.borderLeftWidth = 0;
+            readmeLink.style.borderRightWidth = 0;
+            readmeLink.RegisterCallback<ClickEvent>(_ => Application.OpenURL("https://github.com/JetCreative/JCCommandConsole/blob/main/README.md"));
+            root.Add(readmeLink);
+
             // Add bold line after banner
             var bannerSeparator = new VisualElement();
             bannerSeparator.AddToClassList("bold-separator");

@@ -153,24 +153,7 @@ MonoBehaviour:
       fieldName: OnGamePaused
       flags: 40
   CommandDeclaringTypes:
-    keyData:
-    - resethealth
-    - addhealth
-    - teleport
-    - god
-    - getdistancefromorigin
-    - restart
-    - setdifficulty
-    - score
-    - inventory
-    - healthpercent
-    - isalive
-    - difficulty
-    - health
-    - ammo
-    - gametime
-    - onhealthchanged
-    - ongamepaused
+    keyData: []
   IsCommandStatic:
     keyData:
     - resethealth
