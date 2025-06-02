@@ -41,7 +41,7 @@ namespace JetCreative.CommandConsolePro
         public bool IncludePrivate { get; private set; }
 
         /// <summary>
-        /// Attribute to mark methods, properties, fields, and delegates as console commands that can be executed by JCCommandConsolePro.
+        /// Attribute to mark methods, properties, fields, and delegates as console commands that can be executed by JCCommandConsole.
         /// </summary>
         /// <param name="commandName">Optional custom name for the command. If null, the element's name will be used.
         /// The stored command name will always be lower case.</param>

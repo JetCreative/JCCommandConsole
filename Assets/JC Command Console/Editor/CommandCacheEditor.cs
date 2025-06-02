@@ -575,7 +575,7 @@ namespace JetCreative.CommandConsolePro.Editor
 
         private void OnRegenerateCacheClicked()
         {
-            JCCommandConsolePro.Instance.GenerateCommandCache(commandCache.IncludePrivateMembers, commandCache.IncludeExampleCommands, commandCache.IncludeNamespaces.ToArray(), commandCache.ExcludeNamespaces.ToArray());
+            JCCommandConsole.Instance.GenerateCommandCache(commandCache.IncludePrivateMembers, commandCache.IncludeExampleCommands, commandCache.IncludeNamespaces.ToArray(), commandCache.ExcludeNamespaces.ToArray());
             
             EditorUtility.SetDirty(target);
             AssetDatabase.SaveAssets();
