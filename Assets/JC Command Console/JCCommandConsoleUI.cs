@@ -12,14 +12,14 @@ namespace JetCreative.CommandConsolePro
     /// Manages the UI for the Command Console Pro system.
     /// Provides input field, command logging, and predictive text functionality.
     /// </summary>
-    public class JCConsoleProUI : MonoBehaviour
+    public class JCCommandConsoleUI : MonoBehaviour
     {
         #region Singleton
 
         /// <summary>
-        /// Singleton instance of the JCConsoleProUI.
+        /// Singleton instance of the JCCommandConsoleUI.
         /// </summary>
-        public static JCConsoleProUI Instance { get; private set; }
+        public static JCCommandConsoleUI Instance { get; private set; }
 
         #endregion
 
@@ -188,9 +188,9 @@ namespace JetCreative.CommandConsolePro
         private void Start()
         {
             // Generate command cache if not already done
-            if (!JCCommandConsolePro.Instance.HasGeneratedCache)
+            if (!JCCommandConsole.Instance.HasGeneratedCache)
             {
-                JCCommandConsolePro.Instance?.GenerateCommandCache();
+                JCCommandConsole.Instance?.GenerateCommandCache();
             }
         }
 
@@ -206,23 +206,23 @@ namespace JetCreative.CommandConsolePro
             // Create console panel if needed
             if (!consolePanel)
             {
-                Debug.LogWarning("Console panel not assigned, JCConsoleProUI requires manual UI setup.");
+                Debug.LogWarning("Console panel not assigned, JCCommandConsoleUI requires manual UI setup.");
             }
 
             // Check if essential components are assigned
             if (!outputText)
             {
-                Debug.LogWarning("Output text component not assigned in JCConsoleProUI.");
+                Debug.LogWarning("Output text component not assigned in JCCommandConsoleUI.");
             }
 
             if (!commandInputField)
             {
-                Debug.LogWarning("Command input field not assigned in JCConsoleProUI.");
+                Debug.LogWarning("Command input field not assigned in JCCommandConsoleUI.");
             }
 
             if (!predictiveText)
             {
-                Debug.LogWarning("Predictive text component not assigned in JCConsoleProUI.");
+                Debug.LogWarning("Predictive text component not assigned in JCCommandConsoleUI.");
             }
         }
 
@@ -283,7 +283,7 @@ namespace JetCreative.CommandConsolePro
         /// </summary>
         private void CheckAndWarnEmptyCommandCache()
         {
-            var commandCache = JCCommandConsolePro.GetCommandCache();
+            var commandCache = JCCommandConsole.GetCommandCache();
             
             if (commandCache != null && commandCache.IsEmpty())
             {
@@ -291,7 +291,7 @@ namespace JetCreative.CommandConsolePro
                                       "To generate the command cache:\n" +
                                       "• Editor: Tools → Jet Creative → Command Console\n" +
                                       "• Inspector: Select CommandCache.asset and click 'Generate Command Cache'\n" +
-                                      "• Runtime: Call JCCommandConsolePro.Instance.GenerateCommandCache()";
+                                      "• Runtime: Call JCCommandConsole.Instance.GenerateCommandCache()";
                 
                 LogToOutput(warningMessage, errorColor);
                 LogToOutput("Type 'help' for basic console information.", resultColor);
@@ -344,7 +344,7 @@ namespace JetCreative.CommandConsolePro
             LogToOutput($"> {command}", commandColor);
 
             // Execute the command
-            string result = JCCommandConsolePro.Instance.ExecuteCommand(command);
+            string result = JCCommandConsole.Instance.ExecuteCommand(command);
             
             // Check if result contains an error
             bool isError = result.StartsWith("Error:", StringComparison.OrdinalIgnoreCase);
@@ -522,15 +522,15 @@ namespace JetCreative.CommandConsolePro
             var commandName = string.Empty;
 
             //if first token is not a target command then add empty token at index 0 to make indexing consistent
-            if (JCCommandConsolePro.StartsWithAny(tokens[0], JCCommandConsolePro.TargetCmds, out string prefaceCmd))
+            if (JCCommandConsole.StartsWithAny(tokens[0], JCCommandConsole.TargetCmds, out string prefaceCmd))
                 targetCmd = prefaceCmd;
             else
                 tokens.Insert(0, "");
             
-            if ( tokens.Count > 1 && JCCommandConsolePro.ConsoleCmds.Contains(tokens[1].ToLower()))
+            if ( tokens.Count > 1 && JCCommandConsole.ConsoleCmds.Contains(tokens[1].ToLower()))
                 consoleCmd = tokens[1].ToLower();
             
-            if (tokens.Count > 2 && JCCommandConsolePro.Instance.GetCommandTypeInfo(tokens[2].ToLower()) != null)
+            if (tokens.Count > 2 && JCCommandConsole.Instance.GetCommandTypeInfo(tokens[2].ToLower()) != null)
                 commandName = tokens[2].ToLower();
             
             // Check if the last token is valid
@@ -538,7 +538,7 @@ namespace JetCreative.CommandConsolePro
             string currentToken = tokens[^1];
             
             // Get predictions for the next word
-            string[] predictions = JCCommandConsolePro.Instance.PredictCurrentWord(currentInput);
+            string[] predictions = JCCommandConsole.Instance.PredictCurrentWord(currentInput);
             
             //Format predictions
             if (predictions.Length > 0)
@@ -549,7 +549,7 @@ namespace JetCreative.CommandConsolePro
                 if (tokens.Count == 3 && !string.IsNullOrEmpty(consoleCmd))
                 {
                     string predCommand = predictions[0].ToLower();
-                    string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(predCommand);
+                    string typeInfo = JCCommandConsole.Instance.GetCommandTypeInfo(predCommand);
                     
                     if (!string.IsNullOrEmpty(typeInfo))
                     {
@@ -575,9 +575,9 @@ namespace JetCreative.CommandConsolePro
                 {
                     //string commandName = tokens[2].ToLower();
                     
-                    if (JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName) != null)
+                    if (JCCommandConsole.Instance.GetCommandTypeInfo(commandName) != null)
                     {
-                        string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName);
+                        string typeInfo = JCCommandConsole.Instance.GetCommandTypeInfo(commandName);
                         //determine if there are too many parameters
                         var numParameters = typeInfo.Split(',').Length;
                         
@@ -600,9 +600,9 @@ namespace JetCreative.CommandConsolePro
                         return;
                     }
                     
-                    if (JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName) != null)
+                    if (JCCommandConsole.Instance.GetCommandTypeInfo(commandName) != null)
                     {
-                        string typeInfo = JCCommandConsolePro.Instance.GetCommandTypeInfo(commandName);
+                        string typeInfo = JCCommandConsole.Instance.GetCommandTypeInfo(commandName);
                         string predictionColorHex = ColorUtility.ToHtmlStringRGB(predictiveColor);
                         predictiveText.text = commandInputField.text + $"<color=#{predictionColorHex}>{typeInfo}</color>";
                         return;
@@ -627,13 +627,13 @@ namespace JetCreative.CommandConsolePro
         private bool IsValidToken(string token)
         {
             // Check if it's a preface command
-            if (JCCommandConsolePro.TargetCmds.Any(token.StartsWith))
+            if (JCCommandConsole.TargetCmds.Any(token.StartsWith))
             {
                 return true;
             }
             
             // Check if it's a console command
-            if (JCCommandConsolePro.ConsoleCmds.Contains(token.ToLower()))
+            if (JCCommandConsole.ConsoleCmds.Contains(token.ToLower()))
                 return true;
             
             // Check if it's "select"
@@ -641,7 +641,7 @@ namespace JetCreative.CommandConsolePro
                 return true;
             
             // Check if it's a command name
-            var allCommands = JCCommandConsolePro.Instance.GetAllCommands();
+            var allCommands = JCCommandConsole.Instance.GetAllCommands();
             
             return allCommands.Contains(token.ToLower());
         }
@@ -663,7 +663,7 @@ namespace JetCreative.CommandConsolePro
             if (!commandInputField || !IsConsoleOpen())
                 return;
 
-            string[] predictions = JCCommandConsolePro.Instance.PredictCurrentWord(commandInputField.text);
+            string[] predictions = JCCommandConsole.Instance.PredictCurrentWord(commandInputField.text);
             if (predictions.Length > 0)
             {
                 string[] tokens = commandInputField.text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -706,7 +706,7 @@ namespace JetCreative.CommandConsolePro
             if (logToConsole && outputText)
                 LogToOutput($"> {command}", commandColor);
 
-            string result = JCCommandConsolePro.Instance.ExecuteCommand(command);
+            string result = JCCommandConsole.Instance.ExecuteCommand(command);
             
             if (logToConsole && outputText)
             {

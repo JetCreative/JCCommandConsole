@@ -32,7 +32,7 @@ namespace JetCreative.CommandConsolePro
     /// <para>Usage:</para>
     /// <code>
     /// // Get the singleton instance
-    /// var console = JCCommandConsolePro.Instance;
+    /// var console = JCCommandConsole.Instance;
     /// 
     /// // Generate command cache (usually done automatically)
     /// console.GenerateCommandCache();
@@ -51,7 +51,7 @@ namespace JetCreative.CommandConsolePro
     /// </list>
     /// </remarks>
 
-    public class JCCommandConsolePro: MonoBehaviour
+    public class JCCommandConsole: MonoBehaviour
     {
         #region Command Caches
 
@@ -96,14 +96,14 @@ namespace JetCreative.CommandConsolePro
         #endregion
         #region Lifecycle
 
-        public static JCCommandConsolePro Instance { get; private set; }
+        public static JCCommandConsole Instance { get; private set; }
         public static bool IsInitialized => Instance != null;
         private void OnValidate()
         {
             if (Instance != null && Instance != this) 
             {
                 enabled = false;
-                throw new Exception("Only one instance of JCCommandConsolePro can exist at a time.");
+                throw new Exception("Only one instance of JCCommandConsole can exist at a time.");
             }
             
             Instance = this;
@@ -115,7 +115,7 @@ namespace JetCreative.CommandConsolePro
             if (Instance != null && Instance != this) 
             {
                 Destroy(gameObject);
-                throw new Exception("Only one instance of JCCommandConsolePro can exist at a time.");
+                throw new Exception("Only one instance of JCCommandConsole can exist at a time.");
             }
             
             Instance = this;

@@ -28,7 +28,7 @@ namespace JetCreative.CommandConsolePro
             {
                 if (_cache == null)
                 {
-                    _cache = JCCommandConsolePro.GetCommandCache();
+                    _cache = JCCommandConsole.GetCommandCache();
                 }
                 return _cache;
             }
@@ -46,7 +46,7 @@ namespace JetCreative.CommandConsolePro
             var window = GetWindow<ConsoleProEditor>("Command Console Pro");
             window.minSize = new Vector2(400, 300);
             
-            _cache = JCCommandConsolePro.GetCommandCache();
+            _cache = JCCommandConsole.GetCommandCache();
         }
 
         #endregion
@@ -81,7 +81,7 @@ namespace JetCreative.CommandConsolePro
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Generate Command Cache", GUILayout.Height(30)))
             {
-                JCCommandConsolePro console = JCCommandConsolePro.Instance;
+                JCCommandConsole console = JCCommandConsole.Instance;
                 
                 int commandCount = console.GenerateCommandCache(
                     includePrivateMembers,
@@ -224,14 +224,14 @@ namespace JetCreative.CommandConsolePro
             GUILayout.Label("Console Input Setup", EditorStyles.boldLabel);
             
             EditorGUILayout.HelpBox(
-                "To set up console input controls, select a JCConsoleProUI GameObject in your scene " +
+                "To set up console input controls, select a JCCommandConsoleUI GameObject in your scene " +
                 "and configure the Input Actions in the Inspector.",
                 MessageType.Info
             );
             
             if (GUILayout.Button("Find/Select Console UI in Scene"))
             {
-                var consoleUI = Object.FindFirstObjectByType<JCConsoleProUI>();
+                var consoleUI = Object.FindFirstObjectByType<JCCommandConsoleUI>();
                 if (consoleUI != null)
                 {
                     Selection.activeGameObject = consoleUI.gameObject;
