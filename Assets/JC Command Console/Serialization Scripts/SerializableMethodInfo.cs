@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace JetCreative.Serialization
 {
@@ -14,67 +15,67 @@ namespace JetCreative.Serialization
     {
         public SerializableMethodInfo(MethodInfo aMethodInfo)
         {
-            methodInfo = aMethodInfo;
+            MethodInfo = aMethodInfo;
         }
 
-        public MethodInfo methodInfo;
-        public SerializableType type;
-        public string methodName;
-        public List<SerializableType> parameters = null;
-        public int flags = 0;
+        public MethodInfo MethodInfo;
+        public SerializableType Type;
+        public string MethodName;
+        public List<SerializableType> Parameters = null;
+        public int Flags = 0;
 
         public void OnBeforeSerialize()
         {
-            if (methodInfo == null)
+            if (MethodInfo == null)
                 return;
 
-            type = new SerializableType(methodInfo.DeclaringType);
-            methodName = methodInfo.Name;
-            if (methodInfo.IsPrivate)
-                flags |= (int)BindingFlags.NonPublic;
+            Type = new SerializableType(MethodInfo.DeclaringType);
+            MethodName = MethodInfo.Name;
+            if (MethodInfo.IsPrivate)
+                Flags |= (int)BindingFlags.NonPublic;
             else
-                flags |= (int)BindingFlags.Public;
-            if (methodInfo.IsStatic)
-                flags |= (int)BindingFlags.Static;
+                Flags |= (int)BindingFlags.Public;
+            if (MethodInfo.IsStatic)
+                Flags |= (int)BindingFlags.Static;
             else
-                flags |= (int)BindingFlags.Instance;
-            var p = methodInfo.GetParameters();
+                Flags |= (int)BindingFlags.Instance;
+            var p = MethodInfo.GetParameters();
 
             if (p != null && p.Length > 0)
             {
-                parameters = new List<SerializableType>(p.Length);
+                Parameters = new List<SerializableType>(p.Length);
 
                 for (int i = 0; i < p.Length; i++)
                 {
-                    parameters.Add(new SerializableType(p[i].ParameterType));
+                    Parameters.Add(new SerializableType(p[i].ParameterType));
                 }
             }
             else
-                parameters = null;
+                Parameters = null;
         }
 
         public void OnAfterDeserialize()
         {
-            if (type == null || string.IsNullOrEmpty(methodName))
+            if (Type == null || string.IsNullOrEmpty(MethodName))
                 return;
 
-            var t = type.type;
+            var t = Type.Type;
             Type[] param = null;
 
-            if (parameters != null && parameters.Count > 0)
+            if (Parameters != null && Parameters.Count > 0)
             {
-                param = new Type[parameters.Count];
+                param = new Type[Parameters.Count];
 
-                for (int i = 0; i < parameters.Count; i++)
+                for (int i = 0; i < Parameters.Count; i++)
                 {
-                    param[i] = parameters[i].type;
+                    param[i] = Parameters[i].Type;
                 }
             }
 
             if (param == null)
-                methodInfo = t.GetMethod(methodName, (BindingFlags)flags);
+                MethodInfo = t.GetMethod(MethodName, (BindingFlags)Flags);
             else
-                methodInfo = t.GetMethod(methodName, (BindingFlags)flags, null, param, null);
+                MethodInfo = t.GetMethod(MethodName, (BindingFlags)Flags, null, param, null);
         }
     }
 

@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace JetCreative.Serialization
 {
@@ -10,12 +11,12 @@ namespace JetCreative.Serialization
 
     public class SerializableType : ISerializationCallbackReceiver
     {
-        [NonSerialized] public Type type;
-        public byte[] data;
+        [NonSerialized] public Type Type;
+        public byte[] Data;
 
         public SerializableType(Type aType)
         {
-            type = aType;
+            Type = aType;
         }
 
         public static Type Read(BinaryReader aReader)
@@ -77,17 +78,17 @@ namespace JetCreative.Serialization
             using (var stream = new MemoryStream())
             using (var w = new BinaryWriter(stream))
             {
-                Write(w, type);
-                data = stream.ToArray();
+                Write(w, Type);
+                Data = stream.ToArray();
             }
         }
 
         public void OnAfterDeserialize()
         {
-            using (var stream = new MemoryStream(data))
+            using (var stream = new MemoryStream(Data))
             using (var r = new BinaryReader(stream))
             {
-                type = Read(r);
+                Type = Read(r);
             }
         }
     }

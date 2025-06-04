@@ -464,11 +464,11 @@ namespace JetCreative.CommandConsolePro
             // Check if command exists
             if (propertyGetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
             {
-                return GetPropertyValue(propertyInfo.propertyInfo, targetObjects);
+                return GetPropertyValue(propertyInfo.PropertyInfo, targetObjects);
             }
             else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
             {
-                return GetFieldValue(fieldInfo.fieldInfo, targetObjects);
+                return GetFieldValue(fieldInfo.FieldInfo, targetObjects);
             }
             else
             {
@@ -484,11 +484,11 @@ namespace JetCreative.CommandConsolePro
             // Check if command exists
             if (propertySetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
             {
-                return SetPropertyValue(propertyInfo.propertyInfo, valueString, targetObjects);
+                return SetPropertyValue(propertyInfo.PropertyInfo, valueString, targetObjects);
             }
             else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
             {
-                return SetFieldValue(fieldInfo.fieldInfo, valueString, targetObjects);
+                return SetFieldValue(fieldInfo.FieldInfo, valueString, targetObjects);
             }
             else
             {
@@ -504,11 +504,11 @@ namespace JetCreative.CommandConsolePro
             // Check if command exists
             if (methodCommands.TryGetValue(commandName, out SerializableMethodInfo methodInfo))
             {
-                return InvokeMethod(methodInfo.methodInfo, parameters, targetObjects);
+                return InvokeMethod(methodInfo.MethodInfo, parameters, targetObjects);
             }
             else if (delegateCommands.TryGetValue(commandName, out SerializedFieldInfo delegateField))
             {
-                return InvokeDelegate(delegateField.fieldInfo, parameters, targetObjects);
+                return InvokeDelegate(delegateField.FieldInfo, parameters, targetObjects);
             }
             else
             {
@@ -985,30 +985,30 @@ namespace JetCreative.CommandConsolePro
         {
             if (methodCommands.TryGetValue(commandName, out SerializableMethodInfo methodInfo))
             {
-                var parameters = methodInfo.methodInfo.GetParameters();
+                var parameters = methodInfo.MethodInfo.GetParameters();
                 if (parameters.Length == 0)
-                    return "(method) returns " + FormatTypeName(methodInfo.methodInfo.ReturnType);
+                    return "(method) returns " + FormatTypeName(methodInfo.MethodInfo.ReturnType);
                 
                 var paramInfo = string.Join(", ", parameters.Select(p => $"{FormatTypeName(p.ParameterType)} {p.Name}"));
-                return $"(method) ({paramInfo}) returns {FormatTypeName(methodInfo.methodInfo.ReturnType)}";
+                return $"(method) ({paramInfo}) returns {FormatTypeName(methodInfo.MethodInfo.ReturnType)}";
             }
             else if (propertyGetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyGetInfo))
             {
-                return $"(property) {FormatTypeName(propertyGetInfo.propertyInfo.PropertyType)}";
+                return $"(property) {FormatTypeName(propertyGetInfo.PropertyInfo.PropertyType)}";
             }
             else if (propertySetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertySetInfo))
             {
-                return $"(property) {FormatTypeName(propertySetInfo.propertyInfo.PropertyType)}";
+                return $"(property) {FormatTypeName(propertySetInfo.PropertyInfo.PropertyType)}";
             }
             else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
             {
-                return $"(field) {FormatTypeName(fieldInfo.fieldInfo.FieldType)}";
+                return $"(field) {FormatTypeName(fieldInfo.FieldInfo.FieldType)}";
             }
             else if (delegateCommands.TryGetValue(commandName, out SerializedFieldInfo delegateField))
             {
-                if (delegateField.fieldInfo.FieldType.IsSubclassOf(typeof(Delegate)))
+                if (delegateField.FieldInfo.FieldType.IsSubclassOf(typeof(Delegate)))
                 {
-                    var invokeMethod = delegateField.fieldInfo.FieldType.GetMethod("Invoke");
+                    var invokeMethod = delegateField.FieldInfo.FieldType.GetMethod("Invoke");
                     if (invokeMethod != null)
                     {
                         var parameters = invokeMethod.GetParameters();
@@ -1243,11 +1243,11 @@ namespace JetCreative.CommandConsolePro
                 // For property commands
                 if (propertySetCommands.TryGetValue(commandName, out SerializedPropertyInfo propertyInfo))
                 {
-                    if (propertyInfo.propertyInfo.PropertyType.IsEnum)
+                    if (propertyInfo.PropertyInfo.PropertyType.IsEnum)
                     {
-                        return GetEnumValues(propertyInfo.propertyInfo.PropertyType);
+                        return GetEnumValues(propertyInfo.PropertyInfo.PropertyType);
                     }
-                    else if (propertyInfo.propertyInfo.PropertyType == typeof(bool))
+                    else if (propertyInfo.PropertyInfo.PropertyType == typeof(bool))
                     {
                         return new[] { "true", "false" };
                     }
@@ -1255,11 +1255,11 @@ namespace JetCreative.CommandConsolePro
                 // For field commands
                 else if (fieldCommands.TryGetValue(commandName, out SerializedFieldInfo fieldInfo))
                 {
-                    if (fieldInfo.fieldInfo.FieldType.IsEnum)
+                    if (fieldInfo.FieldInfo.FieldType.IsEnum)
                     {
-                        return GetEnumValues(fieldInfo.fieldInfo.FieldType);
+                        return GetEnumValues(fieldInfo.FieldInfo.FieldType);
                     }
-                    else if (fieldInfo.fieldInfo.FieldType == typeof(bool))
+                    else if (fieldInfo.FieldInfo.FieldType == typeof(bool))
                     {
                         return new[] { "true", "false" };
                     }
@@ -1275,7 +1275,7 @@ namespace JetCreative.CommandConsolePro
                 // For method commands
                 if (methodCommands.TryGetValue(commandName, out SerializableMethodInfo methodInfo))
                 {
-                    var parameters = methodInfo.methodInfo.GetParameters();
+                    var parameters = methodInfo.MethodInfo.GetParameters();
                     if (paramIndex < parameters.Length && parameters[paramIndex].ParameterType.IsEnum)
                     {
                         return GetEnumValues(parameters[paramIndex].ParameterType);
@@ -1287,9 +1287,9 @@ namespace JetCreative.CommandConsolePro
                 }
                 // For delegate commands
                 else if (delegateCommands.TryGetValue(commandName, out SerializedFieldInfo delegateField) && 
-                         delegateField.fieldInfo.FieldType.IsSubclassOf(typeof(Delegate)))
+                         delegateField.FieldInfo.FieldType.IsSubclassOf(typeof(Delegate)))
                 {
-                    var invokeMethod = delegateField.fieldInfo.FieldType.GetMethod("Invoke");
+                    var invokeMethod = delegateField.FieldInfo.FieldType.GetMethod("Invoke");
                     if (invokeMethod != null)
                     {
                         var parameters = invokeMethod.GetParameters();

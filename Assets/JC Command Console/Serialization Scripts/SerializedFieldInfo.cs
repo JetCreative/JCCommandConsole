@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace JetCreative.Serialization
 {
@@ -9,40 +10,40 @@ namespace JetCreative.Serialization
     {
         public SerializedFieldInfo(FieldInfo aFieldInfo)
         {
-            fieldInfo = aFieldInfo;
+            FieldInfo = aFieldInfo;
         }
 
-        public FieldInfo fieldInfo;
-        public SerializableType type;
-        public string fieldName;
-        public int flags = 0;
+        public FieldInfo FieldInfo;
+        public SerializableType Type;
+        public string FieldName;
+        public int Flags = 0;
 
         public void OnBeforeSerialize()
         {
-            if (fieldInfo == null)
+            if (FieldInfo == null)
                 return;
 
-            type = new SerializableType(fieldInfo.DeclaringType);
-            fieldName = fieldInfo.Name;
-            if (fieldInfo.IsPrivate)
-                flags |= (int)BindingFlags.NonPublic;
+            Type = new SerializableType(FieldInfo.DeclaringType);
+            FieldName = FieldInfo.Name;
+            if (FieldInfo.IsPrivate)
+                Flags |= (int)BindingFlags.NonPublic;
             else
-                flags |= (int)BindingFlags.Public;
-            if (fieldInfo.IsStatic)
-                flags |= (int)BindingFlags.Static;
+                Flags |= (int)BindingFlags.Public;
+            if (FieldInfo.IsStatic)
+                Flags |= (int)BindingFlags.Static;
             else
-                flags |= (int)BindingFlags.Instance;
+                Flags |= (int)BindingFlags.Instance;
 
         }
 
         public void OnAfterDeserialize()
         {
-            if (type == null || string.IsNullOrEmpty(fieldName))
+            if (Type == null || string.IsNullOrEmpty(FieldName))
                 return;
 
-            var t = type.type;
+            var t = Type.Type;
 
-            fieldInfo = t.GetField(fieldName, (BindingFlags)flags);
+            FieldInfo = t.GetField(FieldName, (BindingFlags)Flags);
 
         }
     }

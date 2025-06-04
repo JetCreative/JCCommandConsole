@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace JetCreative.Serialization
 {
@@ -8,46 +9,46 @@ namespace JetCreative.Serialization
     {
         public SerializedPropertyInfo(PropertyInfo aPropertyInfo)
         {
-            propertyInfo = aPropertyInfo;
+            PropertyInfo = aPropertyInfo;
         }
         
-        public PropertyInfo propertyInfo;
-        public SerializableType type;
-        public string propertyName;
-        public int flags = 0;
+        public PropertyInfo PropertyInfo;
+        public SerializableType Type;
+        public string PropertyName;
+        public int Flags = 0;
         
         
         public void OnBeforeSerialize()
         {
-            if (propertyInfo == null)
+            if (PropertyInfo == null)
                 return;
 
-            type = new SerializableType(propertyInfo.DeclaringType);
-            propertyName = propertyInfo.Name;
+            Type = new SerializableType(PropertyInfo.DeclaringType);
+            PropertyName = PropertyInfo.Name;
             
-            var getMethod = propertyInfo.GetGetMethod();
-            var setMethod = propertyInfo.GetSetMethod();
+            var getMethod = PropertyInfo.GetGetMethod();
+            var setMethod = PropertyInfo.GetSetMethod();
             
             if ((getMethod != null && getMethod.IsPrivate) 
                 || (setMethod != null && setMethod.IsPrivate))
-                flags |= (int)BindingFlags.NonPublic;
+                Flags |= (int)BindingFlags.NonPublic;
             else
-                flags |= (int)BindingFlags.Public;
+                Flags |= (int)BindingFlags.Public;
             
             
             if ((getMethod != null && getMethod.IsStatic) 
                 || (setMethod != null && setMethod.IsStatic ))
-                flags |= (int)BindingFlags.Static;
+                Flags |= (int)BindingFlags.Static;
             else
-                flags |= (int)BindingFlags.Instance;
+                Flags |= (int)BindingFlags.Instance;
         }
 
         public void OnAfterDeserialize()
         {
-            if (type == null || string.IsNullOrEmpty(propertyName))
+            if (Type == null || string.IsNullOrEmpty(PropertyName))
                 return;
-            var t = type.type;
-            propertyInfo = t.GetProperty(propertyName, (BindingFlags)flags);
+            var t = Type.Type;
+            PropertyInfo = t.GetProperty(PropertyName, (BindingFlags)Flags);
         }
     }
 }
